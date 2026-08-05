@@ -1,34 +1,219 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Character/OBCharacter.h"
+#include "AbilitySystem/OBAbilitySystemComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputActionValue.h"
+#include "Player/OBPlayerState.h"
+#include "Input/OBInputConfig.h"
+#include "Input/OBEnhancedInputComponent.h"
 
-// Sets default values
 AOBCharacter::AOBCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// 캡슐 컴포넌트 설정 및 안전성 검사
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+	check(CapsuleComp != nullptr);
+	CapsuleComp->InitCapsuleSize(42.f, 96.0f);
+
+	// 컨트롤러 회전이 캐릭터에 영향을 주지 않도록 설정
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+
+	// 무브먼트 컴포넌트 설정 및 안전성 검사
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	check(MoveComp != nullptr);
+	MoveComp->bOrientRotationToMovement = false;
+	MoveComp->bUseControllerDesiredRotation = false;
+	MoveComp->MaxWalkSpeed = 500.f;
+
+	// 카메라 암(SpringArm) 설정
+	CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraArm"));
+	check(CameraArm != nullptr);
+	CameraArm->SetupAttachment(RootComponent);
+	CameraArm->TargetArmLength = 1000.0f;
+	CameraArm->bUsePawnControlRotation = false;
+
+	// 캐릭터가 회전해도 카메라는 월드 기준 고정되도록 상속 해제
+	CameraArm->bInheritPitch = false;
+	CameraArm->bInheritRoll = false;
+	CameraArm->bInheritYaw = false;
+	CameraArm->bDoCollisionTest = false; // 벽에 가려도 카메라가 당겨지지 않음 (쿼터뷰 필수)
+
+	// 생성자 단계에서는 Relative로 각도를 꺾어주는 것이 엔진 내부적으로 가장 안전합니다.
+	// (어차피 Inherit을 다 껐기 때문에 Relative가 곧 월드 기준 고정 각도가 됩니다)
+	CameraArm->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
+
+	// 카메라 컴포넌트 설정
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	check(Camera != nullptr);
+	Camera->SetupAttachment(CameraArm, USpringArmComponent::SocketName);
+	Camera->bUsePawnControlRotation = false;
 }
 
-// Called when the game starts or when spawned
 void AOBCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	SetupMouseInterface();
 }
 
-// Called every frame
 void AOBCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	RotateToCursor(DeltaTime);
 }
 
-// Called to bind functionality to input
+void AOBCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
+}
+
 void AOBCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UOBEnhancedInputComponent* OBEnhancedInputComponent = CastChecked<UOBEnhancedInputComponent>(PlayerInputComponent);
+	if (!OBEnhancedInputComponent)
+	{
+		return;
+	}
+
+	OBEnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOBCharacter::Move);
+
+	OBEnhancedInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
 
+void AOBCharacter::Move(const FInputActionValue& Value)
+{
+	if (Controller)
+	{
+		FVector2D MovementVector = Value.Get<FVector2D>();
+
+		// 컨트롤러 회전에 의존하지 않고 월드 축 고정으로 명시
+		const FVector ForwardDirection = FVector::ForwardVector;
+		const FVector RightDirection = FVector::RightVector;
+
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void AOBCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitAbilityActorInfo();
+}
+
+void AOBCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitAbilityActorInfo();
+}
+
+void AOBCharacter::RotateToCursor(float DeltaTime)
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		FHitResult HitResult;
+		// 블루프린트의 'Get Hit Result Under Cursor by Channel' (Visibility 채널)
+		if (PC->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult))
+		{
+			// 마우스가 찍힌 월드 좌표 (Location 핀 분할)
+			FVector TargetLocation = HitResult.ImpactPoint;
+			FVector CharacterLocation = GetActorLocation();
+
+			// 캐릭터가 땅이나 하늘을 보며 기울어지는 버그 방지 (Pitch/Roll 고정 효과)
+			TargetLocation.Z = CharacterLocation.Z;
+
+			// 블루프린트의 'Find Look at Rotation'
+			FRotator TargetRotation = FRotationMatrix::MakeFromX(TargetLocation - CharacterLocation).Rotator();
+
+			// 블루프린트의 'RInterp To' (회전 보간)
+			FRotator CurrentRotation = GetActorRotation();
+
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, RotationInterpSpeed);
+
+			// 블루프린트의 'Set Actor Rotation'
+			SetActorRotation(NewRotation);
+		}
+	}
+}
+
+void AOBCharacter::SetupMouseInterface()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	checkf(PC != nullptr, TEXT("[%s] BeginPlay 단계에서 PlayerController를 찾을 수 없습니다!"), *GetName());
+
+	PC->bShowMouseCursor = true;
+
+	// 탑다운 게임용 입력 모드 설정 (마우스가 게임 화면을 벗어나지 않고, 클릭해도 화면이 안 돌아가게 방지)
+	FInputModeGameAndUI InputModeData;
+	InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock); // 창 모드일 때 마우스 가둘지 여부 (자유롭게 이동 가능)
+	InputModeData.SetHideCursorDuringCapture(false);                         // 클릭 중에도 마우스 유지
+
+	PC->SetInputMode(InputModeData);
+}
+
+UAbilitySystemComponent* AOBCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AOBCharacter::InitAbilityActorInfo()
+{
+	AOBPlayerState* OBPS = GetPlayerState<AOBPlayerState>();
+	check(OBPS);
+	OBPS->GetAbilitySystemComponent()->InitAbilityActorInfo(OBPS, this);
+
+	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
+	AttributeSet = OBPS->GetAttributeSet();
+}
+
+void AOBCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+
+}
+
+void AOBCharacter::AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	if (UOBAbilitySystemComponent* OBAbilitySystemComponent = Cast<UOBAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		OBAbilitySystemComponent->AbilityInputTagReleased(InputTag);
+	}
+}
+
+void AOBCharacter::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+	if (UOBAbilitySystemComponent* OBAbilitySystemComponent = Cast<UOBAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		OBAbilitySystemComponent->AbilityInputTagHeld(InputTag);
+	}
+}
