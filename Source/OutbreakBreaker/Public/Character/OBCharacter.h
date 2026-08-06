@@ -16,6 +16,12 @@ struct FGameplayTag;
 class UOBInputConfig;
 class UGameplayAbility;
 class UGameplayEffect;
+class UOBPlasmaRifleAttributeSet;
+class UOBGravityHammerAttributeSet;
+class UOBSpreadShotgunAttributeSet;
+class UOBDefenseDroneAttributeSet;
+class UOBMagnetMineAttributeSet;
+class UOBAuraModuleAttributeSet;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public ACharacter, public IAbilitySystemInterface
@@ -67,7 +73,23 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 	UPROPERTY()
-	TObjectPtr<UAttributeSet> AttributeSet;
+	TObjectPtr<UAttributeSet> CharacterAttributeSet;
+
+	/** 주무기 3종 속성 세트 캐싱 포인터 */
+	UPROPERTY()
+	TObjectPtr<UOBPlasmaRifleAttributeSet> PlasmaRifleAttributes;
+	UPROPERTY()
+	TObjectPtr<UOBGravityHammerAttributeSet> GravityHammerAttributes;
+	UPROPERTY()
+	TObjectPtr<UOBSpreadShotgunAttributeSet> SpreadShotgunAttributes;
+
+	/** 보조무기 3종 속성 세트 캐싱 포인터 */
+	UPROPERTY()
+	TObjectPtr<UOBDefenseDroneAttributeSet> DefenseDroneAttributes;
+	UPROPERTY()
+	TObjectPtr<UOBMagnetMineAttributeSet> MagnetMineAttributes;
+	UPROPERTY()
+	TObjectPtr<UOBAuraModuleAttributeSet> AuraModuleAttributes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraArm;

@@ -208,7 +208,15 @@ void AOBCharacter::InitAbilityActorInfo()
 	OBPS->GetAbilitySystemComponent()->InitAbilityActorInfo(OBPS, this);
 
 	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
-	AttributeSet = OBPS->GetAttributeSet();
+	CharacterAttributeSet = OBPS->GetAttributeSet();
+
+	PlasmaRifleAttributes = OBPS->GetPlasmaRifleAttributeSet();
+	GravityHammerAttributes = OBPS->GetGravityHammerAttributeSet();
+	SpreadShotgunAttributes = OBPS->GetSpreadShotgunAttributeSet();
+
+	DefenseDroneAttributes = OBPS->GetDefenseDroneAttributeSet();
+	MagnetMineAttributes = OBPS->GetMagnetMineAttributeSet();
+	AuraModuleAttributes = OBPS->GetAuraModuleAttributeSet();
 
 	InitializeDefaultAttributes();
 }
