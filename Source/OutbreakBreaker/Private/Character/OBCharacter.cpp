@@ -209,6 +209,8 @@ void AOBCharacter::InitAbilityActorInfo()
 
 	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
 	AttributeSet = OBPS->GetAttributeSet();
+
+	InitializeDefaultAttributes();
 }
 
 void AOBCharacter::AddCharacterAbilities()
@@ -259,6 +261,23 @@ void AOBCharacter::UpdateDodgePosition(float DeltaTime)
 			StopDodgingMovement();
 		}
 	}
+}
+
+void AOBCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const
+{
+	check(IsValid(GetAbilitySystemComponent()));
+	check(GameplayEffectClass);
+
+	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+}
+
+void AOBCharacter::InitializeDefaultAttributes() const
+{
+	ApplyEffectToSelf(InitAttributes, 1.f);
+	ApplyEffectToSelf(FillAttributes, 1.f);
 }
 
 void AOBCharacter::AbilityInputTagPressed(FGameplayTag InputTag)

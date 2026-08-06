@@ -15,6 +15,7 @@ struct FInputActionValue;
 struct FGameplayTag;
 class UOBInputConfig;
 class UGameplayAbility;
+class UGameplayEffect;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public ACharacter, public IAbilitySystemInterface
@@ -54,6 +55,9 @@ protected:
 
 	void UpdateDodgePosition(float DeltaTime);
 
+	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const;
+	void InitializeDefaultAttributes() const;
+
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -90,6 +94,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DodgeDistance = 100.f;
 	bool bIsDodging = false;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
+	TSubclassOf<UGameplayEffect> InitAttributes;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
+	TSubclassOf<UGameplayEffect> FillAttributes;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")
