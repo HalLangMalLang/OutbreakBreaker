@@ -78,6 +78,8 @@ void AOBCharacter::Tick(float DeltaTime)
 	}
 
 	RotateToCursor(DeltaTime);
+
+	UpdateDodgePosition(DeltaTime);
 }
 
 void AOBCharacter::NotifyControllerChanged()
@@ -110,6 +112,11 @@ void AOBCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AOBCharacter::Move(const FInputActionValue& Value)
 {
+	if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Player.Ability.LockMovement"))))
+	{
+		return;
+	}
+
 	if (Controller)
 	{
 		FVector2D MovementVector = Value.Get<FVector2D>();
@@ -128,6 +135,8 @@ void AOBCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	InitAbilityActorInfo();
+
+	AddCharacterAbilities();
 }
 
 void AOBCharacter::OnRep_PlayerState()
@@ -139,6 +148,11 @@ void AOBCharacter::OnRep_PlayerState()
 
 void AOBCharacter::RotateToCursor(float DeltaTime)
 {
+	if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Player.Ability.LockRotation"))))
+	{
+		return;
+	}
+
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		FHitResult HitResult;
@@ -195,6 +209,56 @@ void AOBCharacter::InitAbilityActorInfo()
 
 	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
 	AttributeSet = OBPS->GetAttributeSet();
+}
+
+void AOBCharacter::AddCharacterAbilities()
+{
+	if (UOBAbilitySystemComponent* OBAbilitySystemComponent = Cast<UOBAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		OBAbilitySystemComponent->AddCharacterAbilities(StartupAbilities);
+	}
+}
+
+void AOBCharacter::DodgingLaunch()
+{
+	DodgeStartLocation = GetActorLocation();
+	DodgeDirection = GetDodgeDirection();
+	DodgeElapsedTime = 0.f;
+	bIsDodging = true;
+}
+
+FVector AOBCharacter::GetDodgeDirection() const
+{
+	FVector Velocity = GetCharacterMovement()->Velocity;
+	Velocity.Z = 0.f;
+
+	if (!Velocity.IsNearlyZero())
+	{
+		return Velocity.GetSafeNormal(); // 이동 중이면 실제 이동 방향
+	}
+
+	return GetActorForwardVector(); // 정지 상태면 조준 방향
+}
+
+void AOBCharacter::StopDodgingMovement()
+{
+	bIsDodging = false;
+	DodgeElapsedTime = 0.f;
+}
+
+void AOBCharacter::UpdateDodgePosition(float DeltaTime)
+{
+	if (bIsDodging)
+	{
+		DodgeElapsedTime += DeltaTime;
+		float Alpha = FMath::Clamp(DodgeElapsedTime / DodgeDuration, 0.f, 1.f);
+		SetActorLocation(DodgeStartLocation + DodgeDirection * DodgeDistance * Alpha, true);
+
+		if (Alpha >= 1.f)
+		{
+			StopDodgingMovement();
+		}
+	}
 }
 
 void AOBCharacter::AbilityInputTagPressed(FGameplayTag InputTag)

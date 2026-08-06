@@ -14,6 +14,7 @@ class UInputAction;
 struct FInputActionValue;
 struct FGameplayTag;
 class UOBInputConfig;
+class UGameplayAbility;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public ACharacter, public IAbilitySystemInterface
@@ -30,6 +31,9 @@ public:
 	virtual void OnRep_PlayerState() override;
 	virtual void NotifyControllerChanged() override;
 
+	void DodgingLaunch();
+	void StopDodgingMovement();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -43,6 +47,12 @@ protected:
 	void SetupMouseInterface();
 
 	void InitAbilityActorInfo();
+
+	void AddCharacterAbilities();
+
+	FVector GetDodgeDirection() const;
+
+	void UpdateDodgePosition(float DeltaTime);
 
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
@@ -72,6 +82,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character | Movement")
 	float RotationInterpSpeed = 15.0f;
 
-private:
+	float DodgeElapsedTime = 0.f;
+	FVector DodgeStartLocation;
+	FVector DodgeDirection;
+	UPROPERTY(EditAnywhere)
+	float DodgeDuration = 0.75f;
+	UPROPERTY(EditAnywhere)
+	float DodgeDistance = 100.f;
+	bool bIsDodging = false;
 
+private:
+	UPROPERTY(EditAnywhere, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 };
