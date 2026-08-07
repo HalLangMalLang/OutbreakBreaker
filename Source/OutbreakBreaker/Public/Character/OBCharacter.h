@@ -13,6 +13,7 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 struct FGameplayTag;
+struct FOBWeaponInfoRow;
 class UOBInputConfig;
 class UGameplayAbility;
 class UGameplayEffect;
@@ -62,7 +63,9 @@ protected:
 	void UpdateDodgePosition(float DeltaTime);
 
 	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const;
-	void InitializeDefaultAttributes() const;
+	void ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, const FOBWeaponInfoRow& WeaponInfo);
+
+	void InitializeDefaultAttributes();
 
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
@@ -121,6 +124,12 @@ protected:
 	TSubclassOf<UGameplayEffect> InitAttributes;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> FillAttributes;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
+	TObjectPtr<UDataTable> WeaponMasterDataTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
+	TSubclassOf<UGameplayEffect> WeaponAttributesInitialize;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")

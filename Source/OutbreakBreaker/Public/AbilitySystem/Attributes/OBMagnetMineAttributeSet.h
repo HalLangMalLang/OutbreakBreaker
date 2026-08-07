@@ -10,6 +10,11 @@ class OUTBREAKBREAKER_API UOBMagnetMineAttributeSet : public UOBWeaponAttributeS
 	GENERATED_BODY()
 	
 public:
+	// 지뢰 전용 폭발 데미지
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
+	FGameplayAttributeData ExplosionDamage;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, ExplosionDamage);
+
 	// 공통 상태 : 폭발 범위/반경 (범위 증가 강화)
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
 	FGameplayAttributeData ExplosionRadius;
