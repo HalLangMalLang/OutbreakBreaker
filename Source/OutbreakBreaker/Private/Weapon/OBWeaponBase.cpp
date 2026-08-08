@@ -1,5 +1,7 @@
 #include "Weapon/OBWeaponBase.h"
 #include "Character/OBCharacter.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/Attributes/OBWeaponAttributeSetBase.h"
 
 
 AOBWeaponBase::AOBWeaponBase()
@@ -8,8 +10,6 @@ AOBWeaponBase::AOBWeaponBase()
 
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	RootComponent = WeaponMesh;
-
-	CurrentWeaponState = EOBWeaponState::Passive;
 }
 
 void AOBWeaponBase::BeginPlay()
@@ -23,13 +23,13 @@ void AOBWeaponBase::Tick(float DeltaTime)
 
 	if (TargetAnchor)
 	{
-		// 위치 추적 (FMath::VInterpTo 보간 이동)
+		// 위치 추적(FMath::VInterpTo 보간 이동)
 		FVector CurrentLocation = GetActorLocation();
 		FVector TargetLocation = TargetAnchor->GetComponentLocation();
 		FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetLocation, DeltaTime, FollowSpeed);
 		SetActorLocation(NewLocation);
 
-		// 회전 동기화 (FMath::RInterpTo 부드러운 추적 회전)
+		// 회전 동기화(FMath::RInterpTo 부드러운 추적 회전)
 		FRotator CurrentRotation = GetActorRotation();
 		FRotator TargetRotation = TargetAnchor->GetComponentRotation();
 		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, FollowSpeed);
@@ -42,6 +42,14 @@ void AOBWeaponBase::SetOwner(AActor* NewOwner)
 	Super::SetOwner(NewOwner);
 
 	OwnerCharacter = Cast<AOBCharacter>(NewOwner);
+	if (OwnerCharacter)
+	{
+		if (UAbilitySystemComponent* ASC = OwnerCharacter->GetAbilitySystemComponent())
+		{
+			AttributeSet = const_cast<UOBWeaponAttributeSetBase*>(Cast<UOBWeaponAttributeSetBase>(ASC->GetAttributeSet(UOBWeaponAttributeSetBase::StaticClass())));
+		}
+		CurrentTag = PassiveTag;
+	}
 }
 
 void AOBWeaponBase::SetTargetAnchor(USceneComponent* InAnchor)
@@ -49,12 +57,23 @@ void AOBWeaponBase::SetTargetAnchor(USceneComponent* InAnchor)
 	TargetAnchor = InAnchor;
 }
 
-void AOBWeaponBase::SetWeaponState(EOBWeaponState NewState)
+void AOBWeaponBase::ToggleWeaponMode(bool bIsActiveMode)
 {
-	if (CurrentWeaponState == NewState)
+	if (!OwnerCharacter)
 	{
 		return;
 	}
 
-	CurrentWeaponState = NewState;
+	FGameplayTag TargetTag = bIsActiveMode ? ActiveTag : PassiveTag;
+
+	if (CurrentTag == TargetTag)
+	{
+		return;
+	}
+
+	OwnerCharacter->SetWeaponTag(CurrentTag, false);
+
+	CurrentTag = TargetTag;
+
+	OwnerCharacter->SetWeaponTag(CurrentTag, true);
 }

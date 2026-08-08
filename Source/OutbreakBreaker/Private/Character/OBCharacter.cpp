@@ -257,6 +257,31 @@ void AOBCharacter::StopDodgingMovement()
 	DodgeElapsedTime = 0.f;
 }
 
+void AOBCharacter::SetWeaponTag(FGameplayTag Tag, bool bAdd)
+{
+	if (!Tag.IsValid())
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+	if (!ASC)
+	{
+		return;
+	}
+
+	if (bAdd)
+	{
+		// 태그 주입 (Add) ➡️ 이 태그를 조건으로 숨죽이던 GA 어빌리티가 자동으로 활성화(Activate)됨
+		ASC->AddLooseGameplayTag(Tag);
+	}
+	else
+	{
+		// 태그 수거 (Remove) ➡️ 켜져있던 해당 GA 어빌리티가 알아서 안전하게 종료(EndAbility)됨
+		ASC->RemoveLooseGameplayTag(Tag);
+	}
+}
+
 void AOBCharacter::UpdateDodgePosition(float DeltaTime)
 {
 	if (bIsDodging)

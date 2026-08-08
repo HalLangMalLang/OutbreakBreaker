@@ -2,17 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Abilities/GameplayAbility.h"
 #include "OBWeaponBase.generated.h"
 
 class AOBCharacter;
-
-UENUM(BlueprintType)
-enum class EOBWeaponState : uint8
-{
-	None,
-	Selected,  // 선택 상태 : 장착되어 플레이어가 직접 사격/조종하는 상태
-	Passive    // 대기 상태 : 캐릭터 주변에서 자동 공격/방어하는 상태
-};
+class UOBWeaponAttributeSetBase;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBWeaponBase : public AActor
@@ -22,8 +16,13 @@ class OUTBREAKBREAKER_API AOBWeaponBase : public AActor
 public:
 	AOBWeaponBase();
 
+	UFUNCTION(BlueprintCallable)
 	void SetTargetAnchor(USceneComponent* InAnchor);
-	virtual void SetWeaponState(EOBWeaponState NewState);
+	void ToggleWeaponMode(bool bIsActiveMode);
+
+	FORCEINLINE FGameplayTag GetActiveTag() const { return ActiveTag; }
+	FORCEINLINE FGameplayTag GetPassiveTag() const { return PassiveTag; }
+	FORCEINLINE FGameplayTag GetCurrentTag() const { return CurrentTag; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,9 +39,19 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon | Owner")
 	TObjectPtr<AOBCharacter> OwnerCharacter;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | State")
-	EOBWeaponState CurrentWeaponState = EOBWeaponState::Passive;
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon | GAS")
+	TWeakObjectPtr<UOBWeaponAttributeSetBase> AttributeSet;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Follow")
 	float FollowSpeed = 6.0f;
+
+private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag ActiveTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon | Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag PassiveTag;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon | Tags", meta = (AllowPrivateAccess = "true"))
+	FGameplayTag CurrentTag;
 };

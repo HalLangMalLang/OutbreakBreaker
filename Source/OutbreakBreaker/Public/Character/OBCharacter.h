@@ -42,6 +42,9 @@ public:
 	void DodgingLaunch();
 	void StopDodgingMovement();
 
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponTag(FGameplayTag Tag, bool bAdd);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
