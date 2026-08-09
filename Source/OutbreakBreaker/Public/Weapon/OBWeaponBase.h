@@ -18,6 +18,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetTargetAnchor(USceneComponent* InAnchor);
+	UFUNCTION(BlueprintCallable)
 	void ToggleWeaponMode(bool bIsActiveMode);
 
 	FORCEINLINE FGameplayTag GetActiveTag() const { return ActiveTag; }

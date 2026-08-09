@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "OBCharacter.generated.h"
 
 class UAbilitySystemComponent;
@@ -12,7 +13,6 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
-struct FGameplayTag;
 struct FOBWeaponInfoRow;
 class UOBInputConfig;
 class UGameplayAbility;
@@ -44,6 +44,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponTag(FGameplayTag Tag, bool bAdd);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon | System")
+	AActor* GetWeaponFromMap(FGameplayTag WeaponTag) const;
+	UFUNCTION(BlueprintCallable, Category = "Weapon | System")
+	void RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon);
 
 protected:
 	virtual void BeginPlay() override;
@@ -133,6 +138,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
 	TSubclassOf<UGameplayEffect> WeaponAttributesInitialize;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon | System")
+	TMap<FGameplayTag, AActor*> WeaponMap;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")
