@@ -42,16 +42,9 @@ void AOBWeaponBase::SetOwner(AActor* NewOwner)
 	Super::SetOwner(NewOwner);
 
 	OwnerCharacter = Cast<AOBCharacter>(NewOwner);
+
 	if (OwnerCharacter)
 	{
-		if (UAbilitySystemComponent* ASC = OwnerCharacter->GetAbilitySystemComponent())
-		{
-			if (WeaponAttributeSetClass)
-			{
-				AttributeSet = const_cast<UOBWeaponAttributeSetBase*>(Cast<UOBWeaponAttributeSetBase>(ASC->GetAttributeSet(WeaponAttributeSetClass)));
-			}
-		}
-
 		CurrentTag = PassiveTag;
 		OwnerCharacter->RegisterWeaponToMap(ActiveTag, this);
 		OwnerCharacter->RegisterWeaponToMap(PassiveTag, this);

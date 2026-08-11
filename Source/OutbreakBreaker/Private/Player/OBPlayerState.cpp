@@ -13,7 +13,7 @@ AOBPlayerState::AOBPlayerState()
 	AbilitySystemComponent = CreateDefaultSubobject<UOBAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 
 	AbilitySystemComponent->SetIsReplicated(false);
-	AttributeSet = CreateDefaultSubobject<UOBCharacterAttributeSet>(TEXT("AttributeSet"));
+	CharacterAttributeSet = CreateDefaultSubobject<UOBCharacterAttributeSet>(TEXT("CharacterAttributeSet"));
 
 	// 주무기 3종 세트 생성
 	PlasmaRifleAttributes = CreateDefaultSubobject<UOBPlasmaRifleAttributeSet>(TEXT("PlasmaRifleAttributes"));

@@ -39,6 +39,12 @@ struct FEffectProperties
 	ACharacter* TargetCharacter = nullptr;
 };
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOBOnLevelUpSignature, float);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOBOnCharacterDeadSignature, AActor*);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOBOnSpeedChangedSignature, float);
+
 UCLASS()
 class OUTBREAKBREAKER_API UOBCharacterAttributeSet : public UAttributeSet
 {
@@ -48,6 +54,10 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
+private:
+	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+
+public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
 	FGameplayAttributeData HP;
 	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, HP);
@@ -56,6 +66,23 @@ public:
 	FGameplayAttributeData MaxHP;
 	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, MaxHP);
 
-private:
-	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props) const;
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData XP;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, XP);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData MaxXP;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, MaxXP);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData Level;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, Level);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData MoveSpeed;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, MoveSpeed);
+
+	FOBOnLevelUpSignature OnLevelUpDelegate;
+	FOBOnCharacterDeadSignature OnCharacterDeadDelegate;
+	FOBOnSpeedChangedSignature OnSpeedChangedDelegate;
 };

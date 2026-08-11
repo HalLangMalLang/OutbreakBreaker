@@ -5,7 +5,7 @@
 
 void UOBCharacterAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-	Super::PreAttributeBaseChange(Attribute, NewValue);
+	Super::PreAttributeChange(Attribute, NewValue);
 
 	if (Attribute == GetHPAttribute())
 	{
@@ -23,6 +23,40 @@ void UOBCharacterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectMo
 	if (Data.EvaluatedData.Attribute == GetHPAttribute())
 	{
 		SetHP(FMath::Clamp(GetHP(), 0.f, GetMaxHP()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetXPAttribute())
+	{
+		if (GetXP() >= GetMaxXP())
+		{
+			float ExcessXP = GetXP() - GetMaxXP();
+			SetLevel(GetLevel() + 1.0f);
+			SetXP(ExcessXP);
+
+			if (OnLevelUpDelegate.IsBound())
+			{
+				OnLevelUpDelegate.Broadcast(GetLevel());
+			}
+		}
+	}
+
+	if (Data.EvaluatedData.Attribute == GetHPAttribute())
+	{
+		if (GetHP() <= 0.f)
+		{
+			if (OnCharacterDeadDelegate.IsBound())
+			{
+				OnCharacterDeadDelegate.Broadcast(Props.SourceAvatarActor);
+			}
+		}
+	}
+
+	if (Data.EvaluatedData.Attribute == GetMoveSpeedAttribute())
+	{
+		if (OnSpeedChangedDelegate.IsBound())
+		{
+			OnSpeedChangedDelegate.Broadcast(GetMoveSpeed());
+		}
 	}
 }
 

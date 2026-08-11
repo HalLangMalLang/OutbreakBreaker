@@ -17,12 +17,6 @@ struct FOBWeaponInfoRow;
 class UOBInputConfig;
 class UGameplayAbility;
 class UGameplayEffect;
-class UOBPlasmaRifleAttributeSet;
-class UOBGravityHammerAttributeSet;
-class UOBSpreadShotgunAttributeSet;
-class UOBDefenseDroneAttributeSet;
-class UOBMagnetMineAttributeSet;
-class UOBAuraModuleAttributeSet;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public ACharacter, public IAbilitySystemInterface
@@ -75,6 +69,12 @@ protected:
 
 	void InitializeDefaultAttributes();
 
+	void InitializeAttributeDelegates();
+
+	void OnLevelUpProcessed(float NewLevel);
+	void OnCharacterDeathProcessed(AActor* Destroyer);
+	void OnMoveSpeedVelocityUpdated(float NewSpeed);
+
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -85,22 +85,6 @@ protected:
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> CharacterAttributeSet;
-
-	/** 주무기 3종 속성 세트 캐싱 포인터 */
-	UPROPERTY()
-	TObjectPtr<UOBPlasmaRifleAttributeSet> PlasmaRifleAttributes;
-	UPROPERTY()
-	TObjectPtr<UOBGravityHammerAttributeSet> GravityHammerAttributes;
-	UPROPERTY()
-	TObjectPtr<UOBSpreadShotgunAttributeSet> SpreadShotgunAttributes;
-
-	/** 보조무기 3종 속성 세트 캐싱 포인터 */
-	UPROPERTY()
-	TObjectPtr<UOBDefenseDroneAttributeSet> DefenseDroneAttributes;
-	UPROPERTY()
-	TObjectPtr<UOBMagnetMineAttributeSet> MagnetMineAttributes;
-	UPROPERTY()
-	TObjectPtr<UOBAuraModuleAttributeSet> AuraModuleAttributes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraArm;
@@ -122,6 +106,7 @@ protected:
 	float DodgeElapsedTime = 0.f;
 	FVector DodgeStartLocation;
 	FVector DodgeDirection;
+
 	UPROPERTY(EditAnywhere)
 	float DodgeDuration = 0.75f;
 	UPROPERTY(EditAnywhere)
@@ -145,4 +130,7 @@ protected:
 private:
 	UPROPERTY(EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GAS | Progression")
+	TSubclassOf<UGameplayEffect> RefreshMaxXPClass;
 };

@@ -40,12 +40,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon | Owner")
 	TObjectPtr<AOBCharacter> OwnerCharacter;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon | GAS")
-	TWeakObjectPtr<UOBWeaponAttributeSetBase> AttributeSet;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon | GAS")
-	TSubclassOf<UAttributeSet> WeaponAttributeSetClass;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon | Follow")
 	float FollowSpeed = 6.0f;
 

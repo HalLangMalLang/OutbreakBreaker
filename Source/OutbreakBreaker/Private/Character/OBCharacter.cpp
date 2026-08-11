@@ -11,6 +11,8 @@
 #include "Input/OBInputConfig.h"
 #include "Input/OBEnhancedInputComponent.h"
 #include "Data/OBWeaponInfoRow.h"
+#include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
+
 
 AOBCharacter::AOBCharacter()
 {
@@ -209,17 +211,10 @@ void AOBCharacter::InitAbilityActorInfo()
 	OBPS->GetAbilitySystemComponent()->InitAbilityActorInfo(OBPS, this);
 
 	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
-	CharacterAttributeSet = OBPS->GetAttributeSet();
-
-	PlasmaRifleAttributes = OBPS->GetPlasmaRifleAttributeSet();
-	GravityHammerAttributes = OBPS->GetGravityHammerAttributeSet();
-	SpreadShotgunAttributes = OBPS->GetSpreadShotgunAttributeSet();
-
-	DefenseDroneAttributes = OBPS->GetDefenseDroneAttributeSet();
-	MagnetMineAttributes = OBPS->GetMagnetMineAttributeSet();
-	AuraModuleAttributes = OBPS->GetAuraModuleAttributeSet();
+	CharacterAttributeSet = OBPS->GetAttributeSetOfClass<UOBCharacterAttributeSet>();
 
 	InitializeDefaultAttributes();
+	InitializeAttributeDelegates();
 }
 
 void AOBCharacter::AddCharacterAbilities()
@@ -293,6 +288,25 @@ void AOBCharacter::RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon
 	}
 
 	WeaponMap.FindOrAdd(WeaponTag) = NewWeapon;
+}
+
+void AOBCharacter::OnLevelUpProcessed(float NewLevel)
+{
+	ApplyEffectToSelf(RefreshMaxXPClass, NewLevel);
+	UE_LOG(LogTemp, Log, TEXT("OnLevelUpProcessed "));
+}
+
+void AOBCharacter::OnCharacterDeathProcessed(AActor* Destroyer)
+{
+	// 사망 처리 예정
+}
+
+void AOBCharacter::OnMoveSpeedVelocityUpdated(float NewSpeed)
+{
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+	}
 }
 
 void AOBCharacter::UpdateDodgePosition(float DeltaTime)
@@ -386,6 +400,19 @@ void AOBCharacter::InitializeDefaultAttributes()
 		if (MasterRow)
 		{
 			ApplyWeaponEffectToSelf(WeaponAttributesInitialize, *MasterRow);
+		}
+	}
+}
+
+void AOBCharacter::InitializeAttributeDelegates()
+{
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		if (const UOBCharacterAttributeSet* OBAS = Cast<UOBCharacterAttributeSet>(CharacterAttributeSet))
+		{
+			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnLevelUpDelegate.AddUObject(this, &AOBCharacter::OnLevelUpProcessed);
+			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnCharacterDeadDelegate.AddUObject(this, &AOBCharacter::OnCharacterDeathProcessed);
+			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnSpeedChangedDelegate.AddUObject(this, &AOBCharacter::OnMoveSpeedVelocityUpdated);
 		}
 	}
 }
