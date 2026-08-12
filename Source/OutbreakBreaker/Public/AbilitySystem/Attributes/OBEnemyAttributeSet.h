@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Attributes/OBAttributeSetBase.h"
-#include "OBCharacterAttributeSet.generated.h"
+#include "OBEnemyAttributeSet.generated.h"
 
 UCLASS()
-class OUTBREAKBREAKER_API UOBCharacterAttributeSet : public UOBAttributeSetBase
+class OUTBREAKBREAKER_API UOBEnemyAttributeSet : public UOBAttributeSetBase
 {
 	GENERATED_BODY()
 
@@ -14,19 +14,17 @@ protected:
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
 	virtual void HandleDeathNotification(AActor* Destroyer);
-	virtual void HandleLevelUpNotification(float NewLevle);
 	virtual void HandleSpeedChangedNotification(float NewSpeed);
 
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FGameplayAttributeData XP;
-	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, XP);
+	FGameplayAttributeData Damage;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, Damage);
 
 	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FGameplayAttributeData MaxXP;
-	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, MaxXP);
+	FGameplayAttributeData BountyXP;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, BountyXP);
 
-	FOBOnLevelUpSignature OnLevelUpDelegate;
-	FOBOnCharacterDeadSignature OnCharacterDeadDelegate;
-	FOBOnSpeedChangedSignature OnSpeedChangedDelegate;
+	FOBOnCharacterDeadSignature OnEnemyDeadDelegate;
+	FOBOnSpeedChangedSignature OnSpeedEnemyDelegate;
 };

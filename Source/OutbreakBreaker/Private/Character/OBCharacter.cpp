@@ -200,11 +200,6 @@ void AOBCharacter::SetupMouseInterface()
 	PC->SetInputMode(InputModeData);
 }
 
-UAbilitySystemComponent* AOBCharacter::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
 void AOBCharacter::InitAbilityActorInfo()
 {
 	AOBPlayerState* OBPS = GetPlayerState<AOBPlayerState>();
@@ -212,18 +207,10 @@ void AOBCharacter::InitAbilityActorInfo()
 	OBPS->GetAbilitySystemComponent()->InitAbilityActorInfo(OBPS, this);
 
 	AbilitySystemComponent = OBPS->GetAbilitySystemComponent();
-	CharacterAttributeSet = OBPS->GetAttributeSetOfClass<UOBCharacterAttributeSet>();
+	AttributeSet = OBPS->GetAttributeSetOfClass<UOBCharacterAttributeSet>();
 
 	InitializeDefaultAttributes();
 	InitializeAttributeDelegates();
-}
-
-void AOBCharacter::AddCharacterAbilities()
-{
-	if (UOBAbilitySystemComponent* OBAbilitySystemComponent = Cast<UOBAbilitySystemComponent>(AbilitySystemComponent))
-	{
-		OBAbilitySystemComponent->AddCharacterAbilities(StartupAbilities);
-	}
 }
 
 void AOBCharacter::DodgingLaunch()
@@ -253,29 +240,6 @@ void AOBCharacter::StopDodgingMovement()
 	DodgeElapsedTime = 0.f;
 }
 
-void AOBCharacter::SetWeaponTag(FGameplayTag Tag, bool bAdd)
-{
-	if (!Tag.IsValid())
-	{
-		return;
-	}
-
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	if (!ASC)
-	{
-		return;
-	}
-
-	if (bAdd)
-	{
-		ASC->AddLooseGameplayTag(Tag);
-	}
-	else
-	{
-		ASC->RemoveLooseGameplayTag(Tag);
-	}
-}
-
 AActor* AOBCharacter::GetWeaponFromMap(FGameplayTag WeaponTag) const
 {
 	return WeaponMap.Contains(WeaponTag) ? WeaponMap[WeaponTag] : nullptr;
@@ -294,20 +258,11 @@ void AOBCharacter::RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon
 void AOBCharacter::OnLevelUpProcessed(float NewLevel)
 {
 	ApplyEffectToSelf(RefreshMaxXPClass, NewLevel);
-	UE_LOG(LogTemp, Log, TEXT("OnLevelUpProcessed "));
 }
 
 void AOBCharacter::OnCharacterDeathProcessed(AActor* Destroyer)
 {
-	// 사망 처리 예정
-}
 
-void AOBCharacter::OnMoveSpeedVelocityUpdated(float NewSpeed)
-{
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-	}
 }
 
 void AOBCharacter::UpdateDodgePosition(float DeltaTime)
@@ -323,17 +278,6 @@ void AOBCharacter::UpdateDodgePosition(float DeltaTime)
 			StopDodgingMovement();
 		}
 	}
-}
-
-void AOBCharacter::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const
-{
-	check(IsValid(GetAbilitySystemComponent()));
-	check(GameplayEffectClass);
-
-	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
-	ContextHandle.AddSourceObject(this);
-	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
-	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 }
 
 void AOBCharacter::ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, const FOBWeaponInfoRow& WeaponInfo)
@@ -392,8 +336,7 @@ void AOBCharacter::ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> Gameplay
 
 void AOBCharacter::InitializeDefaultAttributes()
 {
-	ApplyEffectToSelf(InitAttributes, 1.f);
-	ApplyEffectToSelf(FillAttributes, 1.f);
+	Super::InitializeDefaultAttributes();
 
 	if (WeaponMasterDataTable && WeaponAttributesInitialize)
 	{
@@ -409,11 +352,13 @@ void AOBCharacter::InitializeAttributeDelegates()
 {
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 	{
-		if (const UOBCharacterAttributeSet* OBAS = Cast<UOBCharacterAttributeSet>(CharacterAttributeSet))
+		if (const UOBCharacterAttributeSet* OBAS = Cast<UOBCharacterAttributeSet>(AttributeSet))
 		{
 			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnLevelUpDelegate.AddUObject(this, &AOBCharacter::OnLevelUpProcessed);
 			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnCharacterDeadDelegate.AddUObject(this, &AOBCharacter::OnCharacterDeathProcessed);
 			const_cast<UOBCharacterAttributeSet*>(OBAS)->OnSpeedChangedDelegate.AddUObject(this, &AOBCharacter::OnMoveSpeedVelocityUpdated);
+
+			OBAS->OnSpeedChangedDelegate.Broadcast(OBAS->GetMoveSpeed());
 		}
 	}
 }

@@ -1,13 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "AbilitySystemInterface.h"
+#include "Character/OBCharacterBase.h"
 #include "GameplayTagContainer.h"
 #include "OBCharacter.generated.h"
 
-class UAbilitySystemComponent;
-class UAttributeSet;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -15,18 +12,15 @@ class UInputAction;
 struct FInputActionValue;
 struct FOBWeaponInfoRow;
 class UOBInputConfig;
-class UGameplayAbility;
 class UGameplayEffect;
 
 UCLASS()
-class OUTBREAKBREAKER_API AOBCharacter : public ACharacter, public IAbilitySystemInterface
+class OUTBREAKBREAKER_API AOBCharacter : public AOBCharacterBase
 {
 	GENERATED_BODY()
 
 public:
 	AOBCharacter();
-
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
@@ -36,11 +30,9 @@ public:
 	void DodgingLaunch();
 	void StopDodgingMovement();
 
-	UFUNCTION(BlueprintCallable)
-	void SetWeaponTag(FGameplayTag Tag, bool bAdd);
-
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Weapon | System")
 	AActor* GetWeaponFromMap(FGameplayTag WeaponTag) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Weapon | System")
 	void RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon);
 
@@ -48,32 +40,22 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	void Move(const FInputActionValue& Value);
+	virtual void InitAbilityActorInfo() override;
+	virtual void InitializeDefaultAttributes() override;
+	virtual void InitializeAttributeDelegates() override;
 
+	virtual void OnLevelUpProcessed(float NewLevel) override;
+	virtual void OnCharacterDeathProcessed(AActor* Destroyer) override;
+
+	void Move(const FInputActionValue& Value);
 	// 마우스 커서 방향으로 캐릭터를 부드럽게 회전시키는 함수
 	void RotateToCursor(float DeltaTime);
-
 	// 탑다운 게임을 위한 마우스 커서 및 입력 모드를 설정하는 함수
 	void SetupMouseInterface();
-
-	void InitAbilityActorInfo();
-
-	void AddCharacterAbilities();
-
 	FVector GetDodgeDirection() const;
-
 	void UpdateDodgePosition(float DeltaTime);
 
-	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const;
 	void ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, const FOBWeaponInfoRow& WeaponInfo);
-
-	void InitializeDefaultAttributes();
-
-	void InitializeAttributeDelegates();
-
-	void OnLevelUpProcessed(float NewLevel);
-	void OnCharacterDeathProcessed(AActor* Destroyer);
-	void OnMoveSpeedVelocityUpdated(float NewSpeed);
 
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
@@ -81,11 +63,6 @@ private:
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
 protected:
-	UPROPERTY()
-	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-	UPROPERTY()
-	TObjectPtr<UAttributeSet> CharacterAttributeSet;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraArm;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -113,11 +90,6 @@ protected:
 	float DodgeDistance = 100.f;
 	bool bIsDodging = false;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
-	TSubclassOf<UGameplayEffect> InitAttributes;
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
-	TSubclassOf<UGameplayEffect> FillAttributes;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
 	TObjectPtr<UDataTable> WeaponMasterDataTable;
 
@@ -128,9 +100,6 @@ protected:
 	TMap<FGameplayTag, AActor*> WeaponMap;
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Abilities")
-	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
-
 	UPROPERTY(EditDefaultsOnly, Category = "GAS | Progression")
 	TSubclassOf<UGameplayEffect> RefreshMaxXPClass;
 

@@ -49,7 +49,8 @@ void AOBWeaponBase::SetOwner(AActor* NewOwner)
 		OwnerCharacter->RegisterWeaponToMap(ActiveTag, this);
 		OwnerCharacter->RegisterWeaponToMap(PassiveTag, this);
 
-		OwnerCharacter->SetWeaponTag(CurrentTag, true);
+		//OwnerCharacter->SetWeaponTag(CurrentTag, true);
+		OwnerCharacter->ModifyGameplayTag(CurrentTag, true);
 	}
 }
 
@@ -72,9 +73,11 @@ void AOBWeaponBase::ToggleWeaponMode(bool bIsActiveMode)
 		return;
 	}
 
-	OwnerCharacter->SetWeaponTag(CurrentTag, false);
+	//OwnerCharacter->SetWeaponTag(CurrentTag, false);
+	OwnerCharacter->ModifyGameplayTag(CurrentTag, false);
 
 	CurrentTag = TargetTag;
 
-	OwnerCharacter->SetWeaponTag(CurrentTag, true);
+	//OwnerCharacter->SetWeaponTag(CurrentTag, true);
+	OwnerCharacter->ModifyGameplayTag(CurrentTag, true);
 }
