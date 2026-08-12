@@ -12,6 +12,7 @@
 #include "Input/OBEnhancedInputComponent.h"
 #include "Data/OBWeaponInfoRow.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
+#include "Weapon/OBWeaponBase.h"
 
 
 AOBCharacter::AOBCharacter()
@@ -419,7 +420,39 @@ void AOBCharacter::InitializeAttributeDelegates()
 
 void AOBCharacter::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(TEXT("Ability.Action.Weapon"))))
+	{
+		UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
+		if (!ASC)
+		{
+			return;
+		}
 
+		TArray<FGameplayTag> ActiveWeaponTags;
+		WeaponMap.GetKeys(ActiveWeaponTags);
+
+		for (const FGameplayTag& WeaponTag : ActiveWeaponTags)
+		{
+			if (ASC->HasMatchingGameplayTag(WeaponTag))
+			{
+				if (AOBWeaponBase* OldWeapon = Cast<AOBWeaponBase>(WeaponMap.FindRef(WeaponTag)))
+				{
+					if (WeaponTag == OldWeapon->GetActiveTag())
+					{
+						OldWeapon->ToggleWeaponMode(false);
+						break;
+					}
+				}
+			}
+		}
+
+		FGameplayTag NewWeaponTag = InputToWeaponTagMap.FindRef(InputTag);
+		if (AOBWeaponBase* NewWeapon = Cast<AOBWeaponBase>(WeaponMap.FindRef(NewWeaponTag)))
+		{
+			NewWeapon->ToggleWeaponMode(true);
+		}
+
+	}
 }
 
 void AOBCharacter::AbilityInputTagReleased(FGameplayTag InputTag)

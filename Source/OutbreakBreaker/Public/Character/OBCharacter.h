@@ -133,4 +133,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "GAS | Progression")
 	TSubclassOf<UGameplayEffect> RefreshMaxXPClass;
+
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	TMap<FGameplayTag, FGameplayTag> InputToWeaponTagMap;
 };
