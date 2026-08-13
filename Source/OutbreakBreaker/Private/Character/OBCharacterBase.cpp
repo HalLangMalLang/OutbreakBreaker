@@ -1,6 +1,7 @@
 #include "Character/OBCharacterBase.h"
 #include "AbilitySystem/OBAbilitySystemComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 
 
 AOBCharacterBase::AOBCharacterBase()
@@ -72,7 +73,20 @@ void AOBCharacterBase::InitAbilityActorInfo() {}
 
 void AOBCharacterBase::OnLevelUpProcessed(float NewLevel) {}
 
-void AOBCharacterBase::OnCharacterDeathProcessed(AActor* Destroyer) {}
+void AOBCharacterBase::OnCharacterDeathProcessed(AActor* Destroyer) 
+{
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
 
 void AOBCharacterBase::OnMoveSpeedVelocityUpdated(float NewSpeed)
 {

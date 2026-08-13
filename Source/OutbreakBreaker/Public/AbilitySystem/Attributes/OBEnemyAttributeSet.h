@@ -21,10 +21,6 @@ public:
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, Damage);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
-	FGameplayAttributeData BountyXP;
-	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, BountyXP);
-
 	FOBOnCharacterDeadSignature OnEnemyDeadDelegate;
 	FOBOnSpeedChangedSignature OnSpeedEnemyDelegate;
 };

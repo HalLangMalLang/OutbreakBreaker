@@ -11,13 +11,18 @@ AOBEffectActor::AOBEffectActor()
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot")));
 }
 
+void AOBEffectActor::SetActorLevel(float NewLevel)
+{
+	ActorLevel = NewLevel;
+}
+
 void AOBEffectActor::BeginPlay()
 {
 	Super::BeginPlay();
 
 }
 
-void AOBEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
+void AOBEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass, AActor* SourceActor)
 {
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (!TargetASC)
@@ -26,9 +31,28 @@ void AOBEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGamep
 	}
 
 	check(GameplayEffectClass);
-	FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(this);
+
+	FGameplayEffectContextHandle EffectContextHandle;
+	AActor* FinalSource = nullptr;
+
+	if (SourceActor != nullptr)
+	{
+		UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(SourceActor);
+		EffectContextHandle = SourceASC ? SourceASC->MakeEffectContext() : TargetASC->MakeEffectContext();
+
+		FinalSource = SourceActor;
+	}
+	else
+	{
+		EffectContextHandle = TargetASC->MakeEffectContext();
+
+		FinalSource = this;
+	}
+
+	EffectContextHandle.AddSourceObject(FinalSource);
+
 	const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectClass, ActorLevel, EffectContextHandle);
+
 	const FActiveGameplayEffectHandle ActiveEffectHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data.Get());
 
 	const bool bIsInfinite = EffectSpecHandle.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite;

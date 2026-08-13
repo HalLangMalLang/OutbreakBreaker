@@ -31,19 +31,25 @@ class OUTBREAKBREAKER_API AOBEffectActor : public AActor
 public:
 	AOBEffectActor();
 
+	void SetActorLevel(float NewLevel);
+
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
 	bool bDestroyOnEffectRemoval = false;
 
-	UFUNCTION(BlueprintCallable)
-	void ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass);
+	UFUNCTION(BlueprintCallable, Category = "GAS|Effect")
+	void ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass, AActor* SourceActor = nullptr);
 
 	UFUNCTION(BlueprintCallable)
 	void OnOverlap(AActor* TargetActor);
 	UFUNCTION(BlueprintCallable)
 	void OnEndOverlap(AActor* TargetActor);
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "GAS|Actor")
+	TObjectPtr<AActor> DamageCauser = nullptr;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
