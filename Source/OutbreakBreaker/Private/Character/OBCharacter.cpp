@@ -13,6 +13,7 @@
 #include "Data/OBWeaponInfoRow.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
 #include "Weapon/OBWeaponBase.h"
+#include "UI/HUD/OBHUD.h"
 
 
 AOBCharacter::AOBCharacter()
@@ -211,6 +212,14 @@ void AOBCharacter::InitAbilityActorInfo()
 
 	InitializeDefaultAttributes();
 	InitializeAttributeDelegates();
+
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+	{
+		if (AOBHUD* OBHUD = Cast<AOBHUD>(PC->GetHUD()))
+		{
+			OBHUD->InitOBHUD();
+		}
+	}
 }
 
 void AOBCharacter::DodgingLaunch()
