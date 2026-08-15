@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 
 AOBEnemy::AOBEnemy()
 {
@@ -19,8 +20,6 @@ void AOBEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	InitAbilityActorInfo();
-
-	TargetPlayer = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 }
 
 void AOBEnemy::Tick(float DeltaTime)
@@ -55,7 +54,7 @@ void AOBEnemy::Tick(float DeltaTime)
 		{
 			GetCharacterMovement()->StopMovementImmediately();
 		}
-	
+
 		if (!bIsCurrentlyAttacking)
 		{
 
@@ -68,7 +67,6 @@ void AOBEnemy::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 
-	InitializeDefaultAttributes();
 	InitializeAttributeDelegates();
 
 	AddCharacterAbilities();
@@ -125,3 +123,63 @@ void AOBEnemy::OnCharacterDeathProcessed(AActor* Destroyer)
 	}
 }
 
+void AOBEnemy::OnSpawnFromPool()
+{
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionProfileName(TEXT("Pawn"));
+	}
+
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->SetComponentTickEnabled(true);
+		MoveComp->SetMovementMode(MOVE_Walking);
+	}
+}
+
+void AOBEnemy::OnRecycleToPool()
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->StopMovementImmediately();
+		MoveComp->DisableMovement();
+		MoveComp->SetComponentTickEnabled(false);
+	}
+
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionProfileName(TEXT("PoolStorage"));
+	}
+
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+	}
+}
+
+void AOBEnemy::InitializeSpawnedObject(int32 InLevel, AActor* InTargetPlayer)
+{
+	TargetPlayer = InTargetPlayer;
+
+	if (!AbilitySystemComponent)
+	{
+		return;
+	}
+
+	if (LevelInitEffect)
+	{
+		FGameplayEffectContextHandle ContextHandle = AbilitySystemComponent->MakeEffectContext();
+		ContextHandle.AddInstigator(this, this);
+
+		FGameplayEffectSpecHandle LevelSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(LevelInitEffect, 1.f, ContextHandle);
+		if (LevelSpecHandle.IsValid())
+		{
+			FGameplayTag LevelDataTag = FGameplayTag::RequestGameplayTag(FName("Data.MonsterLevel"));
+			LevelSpecHandle.Data.Get()->SetSetByCallerMagnitude(LevelDataTag, static_cast<float>(InLevel));
+
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*LevelSpecHandle.Data.Get());
+		}
+	}
+
+	InitializeDefaultAttributes();
+}

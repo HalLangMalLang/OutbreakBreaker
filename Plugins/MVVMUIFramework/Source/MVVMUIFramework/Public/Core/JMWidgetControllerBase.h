@@ -79,7 +79,7 @@ struct FJMWidgetControllerParams
  * - UI와 게임 로직 사이의 중재자(MVVM의 ViewModel)
  * - GAS 데이터 변경 감지 및 UI 업데이트
  * - 클라이언트별 UI 상태 관리 (온라인 멀티플레이/싱글플레이 기준)
- * 
+ *
  *   ※ 로컬 스플릿스크린(1개 GameInstance 내 여러 PlayerController)은 미지원.
  *     지원하려면 UJMUISubsystem의 Controller 캐시 키를 (ControllerClass, PlayerController)
  *     조합으로 바꿔야 함.
@@ -89,7 +89,7 @@ struct FJMWidgetControllerParams
  * 2. BindCallbacksToDependencies() - 데이터 변경 감지 등록
  * 3. BroadcastInitialValues() - 초기 UI 데이터 전송
  */
-UCLASS()
+UCLASS(Abstract, NotBlueprintable)
 class MVVMUIFRAMEWORK_API UJMWidgetControllerBase : public UObject
 {
 	GENERATED_BODY()
