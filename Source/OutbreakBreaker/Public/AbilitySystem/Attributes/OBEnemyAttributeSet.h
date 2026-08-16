@@ -21,6 +21,26 @@ public:
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, Damage);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData BountyXP;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, BountyXP);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData AttackRange;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, AttackRange);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData AttackDelay;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, AttackDelay);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData AttackSpeed;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, AttackSpeed);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData ProjectileSpeed;
+	ATTRIBUTE_ACCESSORS(UOBEnemyAttributeSet, ProjectileSpeed);
+
 	FOBOnCharacterDeadSignature OnEnemyDeadDelegate;
 	FOBOnSpeedChangedSignature OnSpeedEnemyDelegate;
 };

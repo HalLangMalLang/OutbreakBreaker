@@ -28,7 +28,7 @@ struct FRuntimeSpawnRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SpawnData")
 	int32 MonsterLevel = 1;
 
-	float LastSpawnTime = -999.0f;
+	float LastSpawnTime = -1.f;
 };
 
 UCLASS()
@@ -39,30 +39,36 @@ class OUTBREAKBREAKER_API AOBSpawnManager : public AActor
 public:
 	AOBSpawnManager();
 
-	FORCEINLINE void SetSpawnTimelineActive(bool bActive) { bIsTimelineActive = bActive; }
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+	void InitializeSpawnManager();
 	void CheckSpawnTimelineLoop();
 	void SpawnEnemyWave(const FGameplayTag PoolTag, int32 Amount, int32 InLevel);
-
 	void RotateAndRefreshSpawnLocationCache();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Spawn|Data")
 	TObjectPtr<UDataTable> SpawnDataTable;
 
+	// 플레이어 기준 몬스터가 소환될 수 있는 최소 반경
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OB|SpawnSettings", meta = (ClampMin = "0.0"))
+	float MinSpawnRadius = 1300.0f;
+
+	// 플레이어 기준 몬스터가 소환될 수 있는 최대 반경
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OB|SpawnSettings", meta = (ClampMin = "0.0"))
+	float MaxSpawnRadius = 1600.0f;
+
+	// 지형(경사로, 계단 등)에서 내비게이션 바닥 판정할 범위
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "OB|SpawnSettings")
+	FVector NavProjectionExtent = FVector(500.0f, 500.0f, 500.0f);
+
 private:
 	float TotalElapsedTime = 0.0f;
 
-	FTimerHandle SpawnTimerHandle;
-
 	UPROPERTY()
 	TObjectPtr<AActor> TargetPlayer = nullptr;
-
-	bool bIsTimelineActive = true;
 
 	TArray<FVector> PrecalculatedLocations;
 

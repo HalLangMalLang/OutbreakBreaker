@@ -36,22 +36,19 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable, Category = "GAS|Effect")
+	void ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass, AActor* SourceActor = nullptr, FGameplayTag DataTag = FGameplayTag(), float Magnitude = 0.0f);
+
+	UFUNCTION(BlueprintCallable)
+	void OnOverlap(AActor* TargetActor, AActor* SourceActor = nullptr, FGameplayTag DataTag = FGameplayTag(), float Magnitude = 0.0f);
+
+	UFUNCTION(BlueprintCallable)
+	void OnEndOverlap(AActor* TargetActor, AActor* SourceActor = nullptr, FGameplayTag DataTag = FGameplayTag(), float Magnitude = 0.0f);
+
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
 	bool bDestroyOnEffectRemoval = false;
 
-	UFUNCTION(BlueprintCallable, Category = "GAS|Effect")
-	void ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass, AActor* SourceActor = nullptr);
-
-	UFUNCTION(BlueprintCallable)
-	void OnOverlap(AActor* TargetActor);
-	UFUNCTION(BlueprintCallable)
-	void OnEndOverlap(AActor* TargetActor);
-
-public:
-	UPROPERTY(BlueprintReadWrite, Category = "GAS|Actor")
-	TObjectPtr<AActor> DamageCauser = nullptr;
-
-protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
 	TSubclassOf<UGameplayEffect>  InstantGameplayEffectClass;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
@@ -69,8 +66,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
 	EEffectRemovalPolicy InfiniteEffectRemovalPolicy = EEffectRemovalPolicy::RemoveOnEndOverlap;
 
+	UPROPERTY(VisibleDefaultsOnly)
+	float EffectMagnitude = 0;
+
+private:
 	TMap<FActiveGameplayEffectHandle, UAbilitySystemComponent*> ActiveEffectHandles;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
+	UPROPERTY(EditAnywhere, Category = "Applied Effects")
 	float ActorLevel = 1.f;
 };

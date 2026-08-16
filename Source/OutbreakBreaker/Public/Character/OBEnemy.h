@@ -7,7 +7,7 @@
 #include "Interface/OBSpawnableInterface.h"
 #include "OBEnemy.generated.h"
 
-class AOBEffectActor;
+class AOBPooledEffectActor;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBEnemy : public AOBCharacterBase, public IPoolableInterface, public IOBSpawnableInterface
@@ -31,8 +31,8 @@ protected:
 	virtual void OnCharacterDeathProcessed(AActor* Destroyer) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|Drop")
-	TSubclassOf<AOBEffectActor> XPGemClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
+	FGameplayTag SpawnGemTag;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
 	TSubclassOf<UGameplayEffect> LevelInitEffect;

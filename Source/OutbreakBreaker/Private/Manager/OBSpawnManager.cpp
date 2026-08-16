@@ -15,6 +15,8 @@ void AOBSpawnManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitializeSpawnManager();
+
 	TargetPlayer = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 
 	if (TargetPlayer)
@@ -27,7 +29,7 @@ void AOBSpawnManager::BeginPlay()
 			while (PrecalculatedLocations.Num() < MaxLocationCacheSize)
 			{
 				float RandomAngle = FMath::FRandRange(0.0f, 360.0f);
-				float RandomRadius = FMath::FRandRange(1300.0f, 1600.0f);
+				float RandomRadius = FMath::FRandRange(MinSpawnRadius, MaxSpawnRadius);
 				float Radian = FMath::DegreesToRadians(RandomAngle);
 
 				FVector TestLocation = PlayerLocation;
@@ -36,7 +38,7 @@ void AOBSpawnManager::BeginPlay()
 				TestLocation.Z = PlayerLocation.Z + 20.0f;
 
 				FNavLocation ProjectedLocation;
-				if (NavSys->ProjectPointToNavigation(TestLocation, ProjectedLocation, FVector(500.0f, 500.0f, 500.0f)))
+				if (NavSys->ProjectPointToNavigation(TestLocation, ProjectedLocation, NavProjectionExtent))
 				{
 					FVector ValidPos = ProjectedLocation.Location;
 					ValidPos.Z += 20.0f;
@@ -46,50 +48,67 @@ void AOBSpawnManager::BeginPlay()
 		}
 	}
 
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AOBSpawnManager::CheckSpawnTimelineLoop, 1.0f, true);
+	//GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AOBSpawnManager::CheckSpawnTimelineLoop, 1.0f, true);
 }
 
 void AOBSpawnManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (TargetPlayer && bIsTimelineActive)
+	if (TargetPlayer)
 	{
 		TotalElapsedTime += DeltaTime;
+
+		CheckSpawnTimelineLoop();
 
 		RotateAndRefreshSpawnLocationCache();
 	}
 }
 
+void AOBSpawnManager::InitializeSpawnManager()
+{
+	if (SpawnDataTable)
+	{
+		TArray<FName> RowNames = SpawnDataTable->GetRowNames();
+		for (const FName& RowName : RowNames)
+		{
+			if (FRuntimeSpawnRow* SpawnRow = SpawnDataTable->FindRow<FRuntimeSpawnRow>(RowName, TEXT("")))
+			{
+				SpawnRow->LastSpawnTime = -1.0f;
+			}
+		}
+	}
+
+	TotalElapsedTime = 0.0f;
+	CurrentRotationIndex = 0;
+}
+
 void AOBSpawnManager::CheckSpawnTimelineLoop()
 {
-	if (!bIsTimelineActive || !TargetPlayer)
+	if (!TargetPlayer || !SpawnDataTable)
 	{
 		return;
 	}
 
-	if (SpawnDataTable)
+	TArray<FName> RowNames = SpawnDataTable->GetRowNames();
+
+	for (const FName& RowName : RowNames)
 	{
-		TArray<FName> RowNames = SpawnDataTable->GetRowNames();
-
-		for (const FName& RowName : RowNames)
+		FRuntimeSpawnRow* SpawnRow = SpawnDataTable->FindRow<FRuntimeSpawnRow>(RowName, TEXT(""));
+		 
+		if (SpawnRow && SpawnRow->EnemyPoolTag.IsValid())
 		{
-			FRuntimeSpawnRow* SpawnRow = SpawnDataTable->FindRow<FRuntimeSpawnRow>(RowName, TEXT(""));
-
-			if (SpawnRow && SpawnRow->EnemyPoolTag.IsValid())
+			if (TotalElapsedTime >= SpawnRow->StartTime && TotalElapsedTime <= SpawnRow->EndTime)
 			{
-				if (TotalElapsedTime >= SpawnRow->StartTime && TotalElapsedTime <= SpawnRow->EndTime)
+				if (SpawnRow->LastSpawnTime < 0.0f)
 				{
-					if (SpawnRow->LastSpawnTime < 0.0f)
-					{
-						SpawnRow->LastSpawnTime = SpawnRow->StartTime;
-					}
+					SpawnRow->LastSpawnTime = TotalElapsedTime - SpawnRow->SpawnInterval;
+				}
 
-					if (TotalElapsedTime - SpawnRow->LastSpawnTime >= SpawnRow->SpawnInterval)
-					{
-						SpawnEnemyWave(SpawnRow->EnemyPoolTag, SpawnRow->SpawnAmount, SpawnRow->MonsterLevel);
-						SpawnRow->LastSpawnTime = TotalElapsedTime;
-					}
+				if (TotalElapsedTime - SpawnRow->LastSpawnTime >= SpawnRow->SpawnInterval)
+				{
+					SpawnEnemyWave(SpawnRow->EnemyPoolTag, SpawnRow->SpawnAmount, SpawnRow->MonsterLevel);
+					SpawnRow->LastSpawnTime += SpawnRow->SpawnInterval;
 				}
 			}
 		}
@@ -117,11 +136,13 @@ void AOBSpawnManager::SpawnEnemyWave(const FGameplayTag PoolTag, int32 Amount, i
 
 		if (UObjectPoolSubsystem* PoolSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UObjectPoolSubsystem>())
 		{
-			AActor* EnemyActor = PoolSubsystem->GetPooledActor(PoolTag);
-			EnemyActor->SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
-			if (IOBSpawnableInterface* Spawnable = Cast<IOBSpawnableInterface>(EnemyActor))
+			if (AActor* EnemyActor = PoolSubsystem->GetPooledActor(PoolTag))
 			{
-				Spawnable->InitializeSpawnedObject(InLevel,TargetPlayer);
+				EnemyActor->SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
+				if (IOBSpawnableInterface* Spawnable = Cast<IOBSpawnableInterface>(EnemyActor))
+				{
+					Spawnable->InitializeSpawnedObject(InLevel, TargetPlayer);
+				}
 			}
 		}
 
@@ -145,7 +166,7 @@ void AOBSpawnManager::RotateAndRefreshSpawnLocationCache()
 	FVector PlayerLocation = TargetPlayer->GetActorLocation();
 
 	float RandomAngle = FMath::FRandRange(0.0f, 360.0f);
-	float RandomRadius = FMath::FRandRange(1300.0f, 1600.0f);
+	float RandomRadius = FMath::FRandRange(MinSpawnRadius, MaxSpawnRadius);
 	float Radian = FMath::DegreesToRadians(RandomAngle);
 
 	FVector TestLocation = PlayerLocation;
@@ -154,7 +175,7 @@ void AOBSpawnManager::RotateAndRefreshSpawnLocationCache()
 	TestLocation.Z = PlayerLocation.Z + 20.0f;
 
 	FNavLocation ProjectedLocation;
-	if (NavSys->ProjectPointToNavigation(TestLocation, ProjectedLocation, FVector(500.0f, 500.0f, 500.0f)))
+	if (NavSys->ProjectPointToNavigation(TestLocation, ProjectedLocation, NavProjectionExtent))
 	{
 		FVector ValidPos = ProjectedLocation.Location;
 		ValidPos.Z += 20.0f;

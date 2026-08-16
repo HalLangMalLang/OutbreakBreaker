@@ -232,6 +232,8 @@ void UObjectPoolSubsystem::RecyclePooledObject(UPooledObject* PoolCompRef)
 	AActor* ReturningActor = PoolCompRef->GetOwner();
 	if (IsValid(ReturningActor))
 	{
+		ReturningActor->SetOwner(nullptr);
+
 		ReturningActor->SetActorEnableCollision(false);
 		ReturningActor->SetActorHiddenInGame(true);
 		ReturningActor->SetActorTickEnabled(false);

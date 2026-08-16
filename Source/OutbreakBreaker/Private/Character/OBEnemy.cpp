@@ -1,11 +1,12 @@
 #include "Character/OBEnemy.h"
 #include "AbilitySystem/OBAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/OBEnemyAttributeSet.h"
-#include "Actor/OBEffectActor.h"
+#include "Actor/OBPooledEffectActor.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Core/ObjectPoolSubsystem.h"
 
 AOBEnemy::AOBEnemy()
 {
@@ -98,7 +99,7 @@ void AOBEnemy::OnCharacterDeathProcessed(AActor* Destroyer)
 	}
 
 	UWorld* World = GetWorld();
-	if (World && XPGemClass)
+	if (World && SpawnGemTag.IsValid())
 	{
 		FVector DeathLocation = GetActorLocation();
 		DeathLocation.Z += 20.0f;
@@ -108,18 +109,23 @@ void AOBEnemy::OnCharacterDeathProcessed(AActor* Destroyer)
 		SpawnTransform.SetRotation(FQuat::Identity);
 		SpawnTransform.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
 
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = nullptr;
-
-		if (AOBEffectActor* SpawnedGem = World->SpawnActor<AOBEffectActor>(XPGemClass, SpawnTransform, SpawnParams))
+		if (UOBEnemyAttributeSet* AS = Cast<UOBEnemyAttributeSet>(AttributeSet))
 		{
-			if (const UOBEnemyAttributeSet* EnemySet = Cast<UOBEnemyAttributeSet>(AttributeSet))
+			if (UObjectPoolSubsystem* PoolSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UObjectPoolSubsystem>())
 			{
-				SpawnedGem->DamageCauser = Destroyer;
-				SpawnedGem->SetActorLevel(EnemySet->GetLevel());
+				if (AActor* EnemyActor = PoolSubsystem->GetPooledActor(SpawnGemTag))
+				{
+					//EnemyActor->SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
+					EnemyActor->SetActorLocation(DeathLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+					if (IOBSpawnableInterface* Spawnable = Cast<IOBSpawnableInterface>(EnemyActor))
+					{
+						Spawnable->InitializeSpawnedObject(AS->GetBountyXP(), TargetPlayer);
+					}
+				}
 			}
 		}
+
 	}
 }
 
