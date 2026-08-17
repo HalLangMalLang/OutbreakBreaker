@@ -26,7 +26,29 @@ public:
 	FGameplayAttributeData MaxXP;
 	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, MaxXP);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData AttackPowerMultiplier;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, AttackPowerMultiplier);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData AttackSpeedMultiplier;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, AttackSpeedMultiplier);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData HPMultiplier;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, HPMultiplier);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData XPMultiplier;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, XPMultiplier);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Attributes")
+	FGameplayAttributeData BonusHP;
+	ATTRIBUTE_ACCESSORS(UOBCharacterAttributeSet, BonusHP);
+
+
 	FOBOnLevelUpSignature OnLevelUpDelegate;
 	FOBOnCharacterDeadSignature OnCharacterDeadDelegate;
 	FOBOnSpeedChangedSignature OnSpeedChangedDelegate;
 };
+

@@ -8,25 +8,25 @@ UCLASS()
 class OUTBREAKBREAKER_API UOBGravityHammerAttributeSet : public UOBWeaponAttributeSetBase
 {
 	GENERATED_BODY()
-	
+
 public:
-	// 그라비티 해머 전용 타격 데미지
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Gravity Hammer")
-	FGameplayAttributeData Damage;
-	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, Damage);
+	FORCEINLINE float GetFinalSelectedPullRadius() const { return GetSelectedPullRadius() + GetBonusPullRadius(); }
+	FORCEINLINE float GetFinalPassivePullRadius() const { return GetPassivePullRadius() + GetBonusPullRadius(); }
 
-	// 대기 상태 : 바닥 찍기 주기/쿨타임
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Gravity Hammer")
-	FGameplayAttributeData SlamCooldown;
-	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, SlamCooldown);
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassivePullRadius;
+	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, PassivePullRadius);
 
-	// 공통 상태 : 넉백 힘
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Gravity Hammer")
-	FGameplayAttributeData KnockbackForce;
-	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, KnockbackForce);
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Active")
+	FGameplayAttributeData SelectedPullRadius;
+	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, SelectedPullRadius);
 
-	// 선택 상태 : 적 끌어들이기 반경
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Gravity Hammer")
-	FGameplayAttributeData PullRadius;
-	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, PullRadius);
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Common")
+	FGameplayAttributeData CommonKnockbackForce;
+	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, CommonKnockbackForce);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Bonus")
+	FGameplayAttributeData BonusPullRadius;
+	ATTRIBUTE_ACCESSORS(UOBGravityHammerAttributeSet, BonusPullRadius);
 };

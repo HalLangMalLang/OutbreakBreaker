@@ -8,20 +8,32 @@ UCLASS()
 class OUTBREAKBREAKER_API UOBAuraModuleAttributeSet : public UOBWeaponAttributeSetBase
 {
 	GENERATED_BODY()
-	
+
 public:
-	// 아우라 전용 틱당 지속 데미지
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Aura Module", meta = (AllowPrivateAccess = "true"))
-	FGameplayAttributeData TickDamage;
-	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, TickDamage);
+	FORCEINLINE float GetFinalPassiveSlowAreaRadius() const { return GetPassiveSlowAreaRadius() + GetBonusSlowAreaRadius(); }
 
-	// 공통 상태 : 적용 반경
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Aura Module")
-	FGameplayAttributeData AuraRadius;
-	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, AuraRadius);
+public:
+	// 오라 장판 적을 둔화시키는 슬로우 영역의 총 반경 크기
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowAreaRadius;
+	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, PassiveSlowAreaRadius);
 
-	// 공통 상태 : 데미지 틱 간격
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Aura Module")
-	FGameplayAttributeData TickInterval;
-	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, TickInterval);
+	// 오라 장판 딜레이 
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowAreaDelay;
+	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, PassiveSlowAreaDelay);
+
+	// 오라 장판의 필드 지속 시간
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowAreaTimer;
+	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, PassiveSlowAreaTimer);
+
+	// 오라 장판 영역 밟은 적의 슬로우 감속률
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowAreaAmount;
+	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, PassiveSlowAreaAmount);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Bonus")
+	FGameplayAttributeData BonusSlowAreaRadius;
+	ATTRIBUTE_ACCESSORS(UOBAuraModuleAttributeSet, BonusSlowAreaRadius);
 };

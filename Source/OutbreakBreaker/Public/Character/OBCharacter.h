@@ -10,9 +10,9 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
-struct FOBWeaponInfoRow;
 class UOBInputConfig;
 class UGameplayEffect;
+class UOBWeaponComponent;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public AOBCharacterBase
@@ -36,6 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon | System")
 	void RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon);
 
+	FORCEINLINE class UOBWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -55,8 +57,6 @@ protected:
 	FVector GetDodgeDirection() const;
 	void UpdateDodgePosition(float DeltaTime);
 
-	void ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, const FOBWeaponInfoRow& WeaponInfo);
-
 private:
 	void AbilityInputTagPressed(FGameplayTag InputTag);
 	void AbilityInputTagReleased(FGameplayTag InputTag);
@@ -67,6 +67,9 @@ protected:
 	TObjectPtr<USpringArmComponent> CameraArm;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UOBWeaponComponent> WeaponComponent;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -89,12 +92,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DodgeDistance = 100.f;
 	bool bIsDodging = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
-	TObjectPtr<UDataTable> WeaponMasterDataTable;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS | Data")
-	TSubclassOf<UGameplayEffect> WeaponAttributesInitialize;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon | System")
 	TMap<FGameplayTag, AActor*> WeaponMap;

@@ -8,25 +8,32 @@ UCLASS()
 class OUTBREAKBREAKER_API UOBMagnetMineAttributeSet : public UOBWeaponAttributeSetBase
 {
 	GENERATED_BODY()
-	
+
 public:
-	// 지뢰 전용 폭발 데미지
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
-	FGameplayAttributeData ExplosionDamage;
-	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, ExplosionDamage);
+	FORCEINLINE float GetFinalPassiveExplosionRadius() const { return GetPassiveExplosionRadius() + GetBonusExplosionRadius(); }
 
-	// 공통 상태 : 폭발 범위/반경 (범위 증가 강화)
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
-	FGameplayAttributeData ExplosionRadius;
-	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, ExplosionRadius);
+public:
+	// 폭발까지 걸리는 지연 시간
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveExplosionDelay;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, PassiveExplosionDelay);
 
-	// 공통 상태 : 슬로우 감속률 (감속 강화)
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
-	FGameplayAttributeData SlowAmount;
-	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, SlowAmount);
+	// 폭발 반경 범위
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveExplosionRadius;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, PassiveExplosionRadius);
 
-	// 공통 상태 : 지뢰 투하 주기 (간격 감소 강화)
-	UPROPERTY(BlueprintReadOnly, Category = "Attributes | Magnet Mine")
-	FGameplayAttributeData DropInterval;
-	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, DropInterval);
+	// 공격에 맞은 적들의 이동속도를 깎아내릴 감속 배율 (예: 0.3f = 30% 감속)
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowAmount;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, PassiveSlowAmount);
+
+	// 슬로우 감속 디버프가 적에 유지될 지속 타이머 시간 (초)
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Passive")
+	FGameplayAttributeData PassiveSlowTimer;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, PassiveSlowTimer);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|Bonus")
+	FGameplayAttributeData BonusExplosionRadius;
+	ATTRIBUTE_ACCESSORS(UOBMagnetMineAttributeSet, BonusExplosionRadius);
 };

@@ -10,10 +10,10 @@
 #include "Player/OBPlayerState.h"
 #include "Input/OBInputConfig.h"
 #include "Input/OBEnhancedInputComponent.h"
-#include "Data/OBWeaponInfoRow.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
 #include "Weapon/OBWeaponBase.h"
 #include "UI/HUD/OBHUD.h"
+#include "ActorComponent/OBWeaponComponent.h"
 
 
 AOBCharacter::AOBCharacter()
@@ -59,6 +59,8 @@ AOBCharacter::AOBCharacter()
 	check(Camera != nullptr);
 	Camera->SetupAttachment(CameraArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
+
+	WeaponComponent = CreateDefaultSubobject<UOBWeaponComponent>(TEXT("WeaponComponent"));
 }
 
 void AOBCharacter::BeginPlay()
@@ -289,72 +291,9 @@ void AOBCharacter::UpdateDodgePosition(float DeltaTime)
 	}
 }
 
-void AOBCharacter::ApplyWeaponEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, const FOBWeaponInfoRow& WeaponInfo)
-{
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponent();
-	check(IsValid(ASC));
-	check(GameplayEffectClass);
-
-	// 컨텍스트 및 원본 스펙 핸들 생성
-	FGameplayEffectContextHandle ContextHandle = ASC->MakeEffectContext();
-	ContextHandle.AddSourceObject(this);
-	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(GameplayEffectClass, 1.f, ContextHandle);
-
-	if (SpecHandle.IsValid() && SpecHandle.Data.IsValid())
-	{
-		FGameplayEffectSpec* Spec = SpecHandle.Data.Get();
-
-		// 플라즈마 라이플
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.PlasmaRifle.Damage")), WeaponInfo.PlasmaRifleDamage);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.PlasmaRifle.TickInterval")), WeaponInfo.TickInterval);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.PlasmaRifle.PassiveRange")), WeaponInfo.PassiveRange);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.PlasmaRifle.PenetrationCount")), WeaponInfo.PenetrationCount);
-
-		// 그라비티 해머
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.GravityHammer.Damage")), WeaponInfo.GravityHammerDamage);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.GravityHammer.SlamCooldown")), WeaponInfo.SlamCooldown);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.GravityHammer.KnockbackForce")), WeaponInfo.KnockbackForce);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.GravityHammer.PullRadius")), WeaponInfo.PullRadius);
-
-		// 스프레드 샷건
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.SpreadShotgun.DamagePerPellet")), WeaponInfo.DamagePerPellet);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.SpreadShotgun.PelletCount")), WeaponInfo.PelletCount);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.SpreadShotgun.SpreadAngle")), WeaponInfo.SpreadAngle);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.SpreadShotgun.FireCooldown")), WeaponInfo.FireCooldown);
-
-		// 디펜스 드론
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.DefenseDrone.PushForce")), WeaponInfo.PushForce);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.DefenseDrone.OrbitRadius")), WeaponInfo.OrbitRadius);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.DefenseDrone.DeflectCooldown")), WeaponInfo.DeflectCooldown);
-
-		// 마그넷 마인
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.MagnetMine.ExplosionDamage")), WeaponInfo.ExplosionDamage);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.MagnetMine.ExplosionRadius")), WeaponInfo.ExplosionRadius);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.MagnetMine.SlowAmount")), WeaponInfo.SlowAmount);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.MagnetMine.DropInterval")), WeaponInfo.DropInterval);
-
-		// 아우라 모듈
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.AuraModule.TickDamage")), WeaponInfo.TickDamage);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.AuraModule.AuraRadius")), WeaponInfo.AuraRadius);
-		Spec->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(TEXT("Data.Weapon.AuraModule.TickInterval")), WeaponInfo.AuraTickInterval);
-
-		// 3. 최종 발송!
-		ASC->ApplyGameplayEffectSpecToTarget(*Spec, ASC);
-	}
-}
-
 void AOBCharacter::InitializeDefaultAttributes()
 {
 	Super::InitializeDefaultAttributes();
-
-	if (WeaponMasterDataTable && WeaponAttributesInitialize)
-	{
-		FOBWeaponInfoRow* MasterRow = WeaponMasterDataTable->FindRow<FOBWeaponInfoRow>(TEXT("AllWeapon"), "");
-		if (MasterRow)
-		{
-			ApplyWeaponEffectToSelf(WeaponAttributesInitialize, *MasterRow);
-		}
-	}
 }
 
 void AOBCharacter::InitializeAttributeDelegates()
