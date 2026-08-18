@@ -32,5 +32,4 @@ void AOBHUD::InitOBHUD()
 
 	HUDWidget->SetWidgetController(OBHUDWidgetController);
 	HUDWidget->AddToViewport();
-	//OBHUDWidgetController->BroadcastInitialValues();
 }

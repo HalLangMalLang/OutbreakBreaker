@@ -3,7 +3,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
-
 AOBCharacterBase::AOBCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;

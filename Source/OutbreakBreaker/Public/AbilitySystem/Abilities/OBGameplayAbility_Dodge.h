@@ -1,14 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/OBGameplayAbility.h"
 #include "OBGameplayAbility_Dodge.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class OUTBREAKBREAKER_API UOBGameplayAbility_Dodge : public UOBGameplayAbility
 {

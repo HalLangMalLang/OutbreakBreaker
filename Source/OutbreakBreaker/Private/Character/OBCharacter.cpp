@@ -8,12 +8,12 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Player/OBPlayerState.h"
-#include "Input/OBInputConfig.h"
 #include "Input/OBEnhancedInputComponent.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
-#include "Weapon/OBWeaponBase.h"
+#include "Actor/Weapon/OBWeaponBase.h"
 #include "UI/HUD/OBHUD.h"
-#include "ActorComponent/OBWeaponComponent.h"
+#include "Component/OBWeaponComponent.h"
+#include "Component/OBUpgradeComponent.h"
 
 
 AOBCharacter::AOBCharacter()
@@ -61,6 +61,29 @@ AOBCharacter::AOBCharacter()
 	Camera->bUsePawnControlRotation = false;
 
 	WeaponComponent = CreateDefaultSubobject<UOBWeaponComponent>(TEXT("WeaponComponent"));
+
+	UpgradeComponent = CreateDefaultSubobject<UOBUpgradeComponent>(TEXT("UpgradeComponent"));
+
+	for (EWeaponType Type : TEnumRange<EWeaponType>())
+	{
+		const UEnum* WeaponEnum = StaticEnum<EWeaponType>();
+		if (!WeaponEnum)
+		{
+			continue;
+		}
+
+		int32 EnumIndex = WeaponEnum->GetIndexByValue(static_cast<int64>(Type));
+		FString EnumName = WeaponEnum->GetNameByIndex(EnumIndex).ToString();
+		FString ComponentName = FString::Printf(TEXT("Anchor%s"), *EnumName);
+
+		USceneComponent* NewAnchor = CreateDefaultSubobject<USceneComponent>(*ComponentName);
+
+		if (NewAnchor)
+		{
+			NewAnchor->SetupAttachment(RootComponent);
+			WeaponAnchor.Add(Type, NewAnchor);
+		}
+	}
 }
 
 void AOBCharacter::BeginPlay()
@@ -264,6 +287,27 @@ void AOBCharacter::RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon
 	}
 
 	WeaponMap.FindOrAdd(WeaponTag) = NewWeapon;
+}
+
+void AOBCharacter::UnregisterWeaponFromMap(FGameplayTag WeaponTag, AActor* WeaponToRemove)
+{
+	if (!WeaponTag.IsValid() || !WeaponToRemove)
+	{
+		return;
+	}
+
+	if (auto* FoundWeaponPtr = WeaponMap.Find(WeaponTag))
+	{
+		if (*FoundWeaponPtr == WeaponToRemove)
+		{
+			WeaponMap.Remove(WeaponTag);
+		}
+	}
+}
+
+USceneComponent* AOBCharacter::GetWeaponAnchor(EWeaponType InWeaponType) const
+{
+	return WeaponAnchor.FindRef(InWeaponType);
 }
 
 void AOBCharacter::OnLevelUpProcessed(float NewLevel)

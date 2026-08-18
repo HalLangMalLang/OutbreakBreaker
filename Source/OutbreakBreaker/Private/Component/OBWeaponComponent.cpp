@@ -1,12 +1,19 @@
-#include "ActorComponent/OBWeaponComponent.h"
+#include "Component/OBWeaponComponent.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Attributes/OBWeaponAttributeSetBase.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
+#include "Core/ObjectPoolSubsystem.h"
+#include "Interface/OBSpawnableInterface.h"
 
 UOBWeaponComponent::UOBWeaponComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+
+	for (EWeaponType Type : TEnumRange<EWeaponType>())
+	{
+		OwnedWeaponLevels.Add(Type, 0);
+	}
 }
 
 void UOBWeaponComponent::InitializeOrUpgradeWeapon(EWeaponType InWeaponType, int32 InNewLevel)
@@ -35,6 +42,22 @@ void UOBWeaponComponent::InitializeOrUpgradeWeapon(EWeaponType InWeaponType, int
 				ASC->ApplyGameplayEffectSpecToSelf(*InitSpecHandle.Data.Get());
 			}
 		}
+
+		if (UWorld* World = GetWorld())
+		{
+			if (UObjectPoolSubsystem* PoolSubsystem = World->GetGameInstance()->GetSubsystem<UObjectPoolSubsystem>())
+			{
+				if (AActor* NewWeapon = PoolSubsystem->GetPooledActor(TargetPreset.ObjectPoolTag))
+				{
+					NewWeapon->SetActorLocation(GetOwner()->GetActorLocation(), false, nullptr, ETeleportType::TeleportPhysics);
+					if (IOBSpawnableInterface* Spawnable = Cast<IOBSpawnableInterface>(NewWeapon))
+					{
+						Spawnable->InitializeSpawnedObject(InNewLevel, GetOwner());
+					}
+				}
+			}
+		}
+
 		TargetPreset.bIsInitialized = true;
 	}
 
@@ -82,48 +105,70 @@ float UOBWeaponComponent::GetFinalAttributeValue(FGameplayAttribute InAttribute)
 		return 0.f;
 	}
 
-	const UOBWeaponAttributeSetBase* WeaponSet = Cast<UOBWeaponAttributeSetBase>(ASC->GetAttributeSet(UOBWeaponAttributeSetBase::StaticClass()));
+	// InAttribute가 속한 '실제 자식 AttributeSet 인스턴스'를 ASC에서 동적으로 찾아옵니다.
+	// 상속 관계 덕분에 베이스 클래스 포인터 하나로 자식 세트(SwordSet, GunSet 등)를 다 받아낼 수 있습니다.
+	const UOBWeaponAttributeSetBase* WeaponSet = Cast<UOBWeaponAttributeSetBase>(ASC->GetAttributeSet(InAttribute.GetAttributeSetClass()));
 	const UOBCharacterAttributeSet* CharSet = Cast<UOBCharacterAttributeSet>(ASC->GetAttributeSet(UOBCharacterAttributeSet::StaticClass()));
+
 	if (!WeaponSet)
 	{
 		return 0.f;
 	}
 
+	// 해당 무기 전용 주머니에서 순수 데이터 테이블 적용값(RawValue) 추출
 	float RawValue = InAttribute.GetNumericValue(WeaponSet);
 
+	// [상속 대응 완료] 문자열 Contains 대신 정적 속성 이름 매칭
+	// 자식 클래스에서 상속받은 속성이어도 이름이 "PassiveDamage"나 "SelectedDamage"이면 완벽히 일치 판정이 납니다.
+	const FName AttribName = InAttribute.GetUProperty()->GetFName();
 
-	float BaseBonus = WeaponSet->GetBonusDamage();
-	float WeaponMultiplier = 1.0f;
-	float CharacterMultiplier = 1.0f;
-
-	FString AttribName = InAttribute.GetName();
-
-	if (AttribName.Contains(TEXT("Damage")))
+	// --- [ 데미지 계열 계산 ] ---
+	if (AttribName == GET_MEMBER_NAME_CHECKED(UOBWeaponAttributeSetBase, PassiveDamage) ||
+		AttribName == GET_MEMBER_NAME_CHECKED(UOBWeaponAttributeSetBase, SelectedDamage))
 	{
 		RawValue += WeaponSet->GetBonusDamage();
-		WeaponMultiplier = WeaponSet->GetWeaponDamageMultiplier();
-		CharacterMultiplier = CharSet ? CharSet->GetAttackPowerMultiplier() : 1.0f;
+		float WeaponMultiplier = WeaponSet->GetWeaponDamageMultiplier();
+		float CharacterMultiplier = CharSet ? CharSet->GetAttackPowerMultiplier() : 1.0f;
 
 		return RawValue * WeaponMultiplier * CharacterMultiplier;
 	}
 
-	if (AttribName.Contains(TEXT("AttackDelay")))
+	// --- [ 공격 딜레이/속도 계열 계산 ] ---
+	if (AttribName == GET_MEMBER_NAME_CHECKED(UOBWeaponAttributeSetBase, PassiveAttackDelay) ||
+		AttribName == GET_MEMBER_NAME_CHECKED(UOBWeaponAttributeSetBase, SelectedAttackDelay))
 	{
 		RawValue = FMath::Max(0.05f, RawValue - WeaponSet->GetBonusAttackDelay());
-		WeaponMultiplier = WeaponSet->GetWeaponAttackSpeedMultiplier();
-		CharacterMultiplier = CharSet ? CharSet->GetAttackSpeedMultiplier() : 1.0f;
+		float WeaponMultiplier = WeaponSet->GetWeaponAttackSpeedMultiplier();
+		float CharacterMultiplier = CharSet ? CharSet->GetAttackSpeedMultiplier() : 1.0f;
+		float CommonSpeed = WeaponSet->GetCommonAttackSpeed();
 
-		return RawValue / (WeaponMultiplier * CharacterMultiplier * WeaponSet->GetCommonAttackSpeed());
+		// Zero Division(0으로 나누기) 크래시 방지용 안전장치
+		float TotalMultiplier = FMath::Max(0.01f, WeaponMultiplier * CharacterMultiplier * CommonSpeed);
+
+		return RawValue / TotalMultiplier;
 	}
 
-	if (AttribName.Contains(TEXT("Range")) || AttribName.Contains(TEXT("Radius")))
+	// --- [ 사거리/범위 계열 계산 ] ---
+	if (AttribName == GET_MEMBER_NAME_CHECKED(UOBWeaponAttributeSetBase, PassiveAttackRange))
 	{
 		RawValue += WeaponSet->GetBonusRange();
-		WeaponMultiplier = WeaponSet->GetWeaponRangeMultiplier();
+		float WeaponMultiplier = WeaponSet->GetWeaponRangeMultiplier();
 
 		return RawValue * WeaponMultiplier;
 	}
 
+	// 곱연산 주머니(Multiplier)나 레벨(Level) 자체를 요청한 경우 연산 없이 순수 값 반환
 	return RawValue;
+}
+
+
+void UOBWeaponComponent::DeinitializeWeapon(EWeaponType InWeaponType)
+{
+	if (FOBWeaponAssetPreset* FoundPreset = WeaponAssetMap.Find(InWeaponType))
+	{
+		FoundPreset->bIsInitialized = false;
+
+		UE_LOG(LogTemp, Log, TEXT("%d 타입 무기가 반납되어 초기화 상태가 해제되었습니다."), (int32)InWeaponType);
+	}
 }
 

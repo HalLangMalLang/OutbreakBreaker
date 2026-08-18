@@ -34,8 +34,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
 	FGameplayTag SpawnGemTag;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Attributes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
 	TSubclassOf<UGameplayEffect> LevelInitEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
+	FGameplayTag LevelInitTag;
 
 	UPROPERTY(BlueprintReadWrite, Category = "GAS|EnemyAI")
 	TObjectPtr<AActor> TargetPlayer = nullptr;
@@ -48,4 +51,5 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
 	FGameplayTag AttackAbilityTag;
+
 };

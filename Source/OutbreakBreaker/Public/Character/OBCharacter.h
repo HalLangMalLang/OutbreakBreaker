@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Character/OBCharacterBase.h"
 #include "GameplayTagContainer.h"
+#include "DataStructures/OBWeaponDataStructures.h"
 #include "OBCharacter.generated.h"
 
 class USpringArmComponent;
@@ -13,6 +14,7 @@ struct FInputActionValue;
 class UOBInputConfig;
 class UGameplayEffect;
 class UOBWeaponComponent;
+class UOBUpgradeComponent;
 
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public AOBCharacterBase
@@ -35,6 +37,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon | System")
 	void RegisterWeaponToMap(FGameplayTag WeaponTag, AActor* NewWeapon);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon | System")
+	void UnregisterWeaponFromMap(FGameplayTag WeaponTag, AActor* WeaponToRemove);
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Anchor")
+	USceneComponent* GetWeaponAnchor(EWeaponType InWeaponType) const;
 
 	FORCEINLINE class UOBWeaponComponent* GetWeaponComponent() const { return WeaponComponent; }
 
@@ -67,9 +75,14 @@ protected:
 	TObjectPtr<USpringArmComponent> CameraArm;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> Camera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Anchor")
+	TMap<EWeaponType, TObjectPtr<USceneComponent>> WeaponAnchor;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Weapon", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UOBWeaponComponent> WeaponComponent;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components|Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UOBUpgradeComponent> UpgradeComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -94,7 +107,7 @@ protected:
 	bool bIsDodging = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon | System")
-	TMap<FGameplayTag, AActor*> WeaponMap;
+	TMap<FGameplayTag, TObjectPtr<AActor>> WeaponMap;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "GAS | Progression")

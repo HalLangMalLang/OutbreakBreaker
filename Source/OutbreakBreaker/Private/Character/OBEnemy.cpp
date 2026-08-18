@@ -115,7 +115,6 @@ void AOBEnemy::OnCharacterDeathProcessed(AActor* Destroyer)
 			{
 				if (AActor* EnemyActor = PoolSubsystem->GetPooledActor(SpawnGemTag))
 				{
-					//EnemyActor->SetActorTransform(SpawnTransform, false, nullptr, ETeleportType::TeleportPhysics);
 					EnemyActor->SetActorLocation(DeathLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
 					if (IOBSpawnableInterface* Spawnable = Cast<IOBSpawnableInterface>(EnemyActor))
@@ -180,8 +179,7 @@ void AOBEnemy::InitializeSpawnedObject(int32 InLevel, AActor* InTargetPlayer)
 		FGameplayEffectSpecHandle LevelSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(LevelInitEffect, 1.f, ContextHandle);
 		if (LevelSpecHandle.IsValid())
 		{
-			FGameplayTag LevelDataTag = FGameplayTag::RequestGameplayTag(FName("Data.MonsterLevel"));
-			LevelSpecHandle.Data.Get()->SetSetByCallerMagnitude(LevelDataTag, static_cast<float>(InLevel));
+			LevelSpecHandle.Data.Get()->SetSetByCallerMagnitude(LevelInitTag, static_cast<float>(InLevel));
 
 			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*LevelSpecHandle.Data.Get());
 		}

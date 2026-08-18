@@ -24,9 +24,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Asset")
 	TSubclassOf<UGameplayEffect> InitializationGE;
 
-	// 레벨 전용 GE */
+	// 레벨 전용 GE 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Asset")
 	TSubclassOf<UGameplayEffect> LevelUpgradeGE;
+
+	// 오브젝트풀 태그
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon Asset")
+	FGameplayTag ObjectPoolTag;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Runtime")
 	bool bIsInitialized = false;
@@ -45,7 +49,15 @@ public:
 
 	float GetFinalAttributeValue(FGameplayAttribute InAttribute) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon|Setup")
+	void DeinitializeWeapon(EWeaponType InWeaponType);
+
+	FORCEINLINE int32 GetCurrentWeaponLevel(EWeaponType InWeaponType) const { return OwnedWeaponLevels.FindRef(InWeaponType); }
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Setup", meta = (AllowPrivateAccess = "true"))
 	TMap<EWeaponType, FOBWeaponAssetPreset> WeaponAssetMap;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|Runtime", meta = (AllowPrivateAccess = "true"))
+	TMap<EWeaponType, int32> OwnedWeaponLevels;
 };

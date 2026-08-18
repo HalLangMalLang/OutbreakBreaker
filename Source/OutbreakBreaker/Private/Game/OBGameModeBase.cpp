@@ -31,7 +31,7 @@ void AOBGameModeBase::InitGame(const FString& MapName, const FString& Options, F
 		if (UObjectPoolSubsystem* PoolSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UObjectPoolSubsystem>())
 		{
 			PoolSubsystem->SetupPools(PooledObjectData);
-			UE_LOG(LogTemp, Log, TEXT("[GameMode] %d개의 태그 풀 데이터를 성공적으로 초기화 주입했습니다."), PooledObjectData.Num());
+			UE_LOG(LogTemp, Log, TEXT("[GameMode] %d개의 태그 풀 데이터를 성공적으로 초기화"), PooledObjectData.Num());
 		}
 	}
 }

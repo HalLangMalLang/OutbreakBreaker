@@ -47,8 +47,6 @@ void AOBSpawnManager::BeginPlay()
 			}
 		}
 	}
-
-	//GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AOBSpawnManager::CheckSpawnTimelineLoop, 1.0f, true);
 }
 
 void AOBSpawnManager::Tick(float DeltaTime)
