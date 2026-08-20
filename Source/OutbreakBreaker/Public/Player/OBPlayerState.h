@@ -22,7 +22,7 @@ public:
 	template<typename T>
 	T* GetAttributeSetOfClass() const;
 
-protected:
+public:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 

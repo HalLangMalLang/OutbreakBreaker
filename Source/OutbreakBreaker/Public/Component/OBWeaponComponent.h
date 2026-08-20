@@ -8,6 +8,7 @@
 
 class UDataTable;
 class UGameplayEffect;
+class UAttributeSet;
 struct FGameplayAttribute;
 
 USTRUCT(BlueprintType)
@@ -55,6 +56,9 @@ public:
 	FORCEINLINE int32 GetCurrentWeaponLevel(EWeaponType InWeaponType) const { return OwnedWeaponLevels.FindRef(InWeaponType); }
 
 protected:
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Setup", meta = (AllowPrivateAccess = "true"))
+	//TObjectPtr<UDataTable> WeaponBaseSetupTable;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon|Setup", meta = (AllowPrivateAccess = "true"))
 	TMap<EWeaponType, FOBWeaponAssetPreset> WeaponAssetMap;
 

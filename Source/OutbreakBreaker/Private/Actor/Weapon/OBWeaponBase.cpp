@@ -120,7 +120,5 @@ void AOBWeaponBase::InitializeSpawnedObject(int32 InLevel, AActor* InTargetPlaye
 		OwnerCharacter->RegisterWeaponToMap(PassiveTag, this);
 
 		OwnerCharacter->ModifyGameplayTag(CurrentTag, true);
-
-		WeaponComponent->InitializeOrUpgradeWeapon(WeaponType, InLevel);
 	}
 }

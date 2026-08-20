@@ -317,7 +317,10 @@ void AOBCharacter::OnLevelUpProcessed(float NewLevel)
 
 void AOBCharacter::OnCharacterDeathProcessed(AActor* Destroyer)
 {
-
+	if (OnCharacterDeadDelegate.IsBound())
+	{
+		OnCharacterDeadDelegate.Broadcast(Destroyer);
+	}
 }
 
 void AOBCharacter::UpdateDodgePosition(float DeltaTime)

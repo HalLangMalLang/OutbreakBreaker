@@ -16,6 +16,8 @@ class UGameplayEffect;
 class UOBWeaponComponent;
 class UOBUpgradeComponent;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnCharacterDeadSignature, AActor* /* Destroyer */);
+
 UCLASS()
 class OUTBREAKBREAKER_API AOBCharacter : public AOBCharacterBase
 {
@@ -70,6 +72,9 @@ private:
 	void AbilityInputTagReleased(FGameplayTag InputTag);
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
+public:
+	FOnCharacterDeadSignature OnCharacterDeadDelegate;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraArm;
@@ -106,13 +111,13 @@ protected:
 	float DodgeDistance = 100.f;
 	bool bIsDodging = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Weapon | System")
-	TMap<FGameplayTag, TObjectPtr<AActor>> WeaponMap;
-
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "GAS | Progression")
 	TSubclassOf<UGameplayEffect> RefreshMaxXPClass;
 
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	TMap<FGameplayTag, FGameplayTag> InputToWeaponTagMap;
+
+	UPROPERTY()
+	TMap<FGameplayTag, TObjectPtr<AActor>> WeaponMap;
 };

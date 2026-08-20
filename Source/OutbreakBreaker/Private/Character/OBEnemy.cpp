@@ -126,6 +126,13 @@ void AOBEnemy::OnCharacterDeathProcessed(AActor* Destroyer)
 		}
 
 	}
+
+	// 몽타주 재생
+	//if (UAnimInstance* AnimInst = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr)
+	//{
+	//	AnimInst->Montage_Play(DeathMontage);
+	//}
+	GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &AOBEnemy::OnRecycleToPool, DeathDelay, false);
 }
 
 void AOBEnemy::OnSpawnFromPool()
@@ -149,6 +156,18 @@ void AOBEnemy::OnRecycleToPool()
 		MoveComp->StopMovementImmediately();
 		MoveComp->DisableMovement();
 		MoveComp->SetComponentTickEnabled(false);
+		MoveComp->Deactivate();
+	}
+
+	if (USkeletalMeshComponent* MonsterMesh = GetMesh())
+	{
+		// 래그돌을 켰었다면 물리 시뮬레이션을 다시 꺼줍니다.
+		MonsterMesh->SetSimulatePhysics(false);
+		MonsterMesh->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+		// 본인의 캐릭터 블루프린트 메쉬 탭에 적혀있는 기본 Relative 값
+		MonsterMesh->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+		MonsterMesh->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	}
 
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())

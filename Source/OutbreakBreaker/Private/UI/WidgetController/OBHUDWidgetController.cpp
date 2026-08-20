@@ -1,5 +1,6 @@
 #include "UI/WidgetController/OBHUDWidgetController.h"
 #include "AbilitySystem/Attributes/OBCharacterAttributeSet.h"
+#include "Game/OBGameStateBase.h"
 
 void UOBHUDWidgetController::BroadcastInitialValues()
 {
@@ -49,6 +50,12 @@ void UOBHUDWidgetController::BindCallbacksToDependencies()
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UOBCharacterAttributeSet::GetLevelAttribute())
 		.AddLambda([this](const FOnAttributeChangeData& Data) {
 		OnLevelChanged.Broadcast(Data.NewValue); });
+
+	AOBGameStateBase* GS = Cast<AOBGameStateBase>(GetWorld()->GetGameState());
+	if (GS)
+	{
+		GS->OnMatchTimeChangedDelegate.AddLambda([this](int32 CurrentTimeInSeconds) {OnMatchTimeChanged.Broadcast(CurrentTimeInSeconds); });
+	}
 }
 
 void UOBHUDWidgetController::InitializeVisibility()

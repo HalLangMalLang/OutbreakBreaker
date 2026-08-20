@@ -17,8 +17,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Upgrade | Manager")
 	TArray<FOBUpgradeCardData> GetRandomUpgradeCards(int32 CurrentPlayerLevel, int32 CardCount = 3);
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon|Upgrade")
-	void ApplyUpgradeCard(const FOBUpgradeCardData& SelectedCard);
+	UFUNCTION(BlueprintCallable, Category = "Upgrade")
+	void ApplyUpgradeCard(const FOBUpgradeCardData& SelectedCard, int32 InCardStage);
 
 	UFUNCTION(BlueprintCallable, Category = "Upgrade | Start")
 	TArray<FOBUpgradeCardData> GetStartWeaponCards();

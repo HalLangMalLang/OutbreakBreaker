@@ -19,6 +19,19 @@ enum class EWeaponType : uint8
 ENUM_RANGE_BY_FIRST_AND_LAST(EWeaponType, EWeaponType::PlasmaRifle, EWeaponType::AuraModule);
 
 USTRUCT(BlueprintType)
+struct FOBWeaponAttributePair
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	FGameplayTag AttributeTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	float AttributeValue = 0.f;
+};
+
+USTRUCT(BlueprintType)
 struct OUTBREAKBREAKER_API FOBUpgradeCardData : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -47,27 +60,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Card Action")
 	TSubclassOf<class UGameplayEffect> UpgradeGameplayEffect;
 
-	// SetByCaller로 배달할 실시간 증강 스탯 숫자
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Card Action")
-	float Value = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TArray<FGameplayTag> EffectTags;
 
-	// SetByCaller 태그
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Card Action")
-	FGameplayTag EffectTag;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Modifier")
+	TArray<float> StageValues;
 };
 
-USTRUCT(BlueprintType)
-struct FOBWeaponAttributePair
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	FGameplayTag AttributeTag;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	float AttributeValue = 0.f;
-};
 
 USTRUCT(BlueprintType)
 struct FOBWeaponLevelData : public FTableRowBase

@@ -14,6 +14,10 @@ class OUTBREAKBREAKER_API AOBHUD : public AHUD
 public:
 	void InitOBHUD();
 
+	void ShowVictoryScreen();
+
+	void ShowGameOverScreen();
+
 private:
 	UPROPERTY(EditAnywhere, Category = "HS|UI")
 	TSubclassOf<UJMUserWidgetBase> HUDWidgetClass;

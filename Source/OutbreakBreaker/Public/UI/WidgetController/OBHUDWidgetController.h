@@ -21,6 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxHealthChangedSignature, float,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnExpChangedSignature, float, NewExp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxExpChangedSignature, float, NewMaxExp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelChangedSignature, float, NewLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMatchTimeChangedControllerSignature, int32, NewMatchTimeInSeconds);
 
 UCLASS(NotBlueprintable, BlueprintType)
 class OUTBREAKBREAKER_API UOBHUDWidgetController : public UJMWidgetControllerBase
@@ -79,6 +80,9 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, Category = "HUD|Events")
 	FOnLevelChangedSignature OnLevelChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "HUD|Events")
+	FOnMatchTimeChangedControllerSignature OnMatchTimeChanged;
 
 private:
 	TMap<EHUDElement, bool> HUDElementVisibility;

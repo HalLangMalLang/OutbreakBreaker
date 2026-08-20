@@ -18,6 +18,10 @@ public:
 
 	FORCEINLINE AOBSpawnManager* GetSpawnManager() const { return SpawnManager; }
 
+	void HandlePlayerVictory();
+
+	void HandlePlayerDeath(AActor* Destroyer);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
@@ -28,6 +32,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<FGameplayTag, FPooledObjectData> PooledObjectData;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 TargetMatchTimeInSeconds = 450;
 
 private:
 	UPROPERTY()

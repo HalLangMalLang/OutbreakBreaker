@@ -8,5 +8,4 @@ UCLASS()
 class OUTBREAKBREAKER_API AOBPlayerController : public APlayerController
 {
 	GENERATED_BODY()
-	
 };

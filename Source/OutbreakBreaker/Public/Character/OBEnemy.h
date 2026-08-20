@@ -52,4 +52,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|EnemyAI")
 	FGameplayTag AttackAbilityTag;
 
+private:
+	FTimerHandle DestroyTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	float DeathDelay = 3.0f;
 };

@@ -33,3 +33,13 @@ void AOBHUD::InitOBHUD()
 	HUDWidget->SetWidgetController(OBHUDWidgetController);
 	HUDWidget->AddToViewport();
 }
+
+void AOBHUD::ShowVictoryScreen()
+{
+
+}
+
+void AOBHUD::ShowGameOverScreen()
+{
+
+}
